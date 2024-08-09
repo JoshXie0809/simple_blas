@@ -6,7 +6,7 @@ mod mult_method;
 mod div_method;
 
 
-/// ##Possibe Error type
+/// ## Possibe Error types
 #[derive(Debug, PartialEq)]
 pub enum ListError {
     DivisionByZero,
@@ -15,14 +15,17 @@ pub enum ListError {
 }
 
 
-/// ##Three possible Type(Now)
-/// --1 Null: store nothing
-/// --2 Scalar: store a value
-/// --3 Array1D: store 1 dimension vector
+/// ## Three possible Type (Now, Matrix will add later)
+/// -1 Null: store nothing
+/// 
+/// -2 Scalar: store a value
+/// 
+/// -3 Array1D: store 1 dimension vector
 /// ```
 /// use simple_blas::array::Array;
 /// 
-/// // create a Null
+/// // create a Null and specify the type
+/// // for add value later
 /// let null = Array::<i32>::new_null();
 /// 
 /// // create a scalar that stores a value
