@@ -1,6 +1,7 @@
 #[cfg(test)]
 pub mod tests {
-    use simple_blas::Array;
+    use simple_blas::array::Array;
+    // use simple_blas::array::ListError;
 
     #[test]
     fn new_a_scalar() {

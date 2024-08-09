@@ -1,8 +1,8 @@
 #[cfg(test)]
 pub mod tests {
     
-    use simple_blas::Array;
-    use simple_blas::ListError;
+    use simple_blas::array::Array;
+    use simple_blas::array::ListError;
 
     #[test]
     fn minus_method_scalar() -> Result<(), ListError> {
