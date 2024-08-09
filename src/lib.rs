@@ -110,7 +110,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
 }
 
-impl<'a, T> PartialEq for Array<T>
+impl<T> PartialEq for Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn minus_method_array_1d() -> Result<(), ListError> {
-        
+
         Ok(())
     }
 
