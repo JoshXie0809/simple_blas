@@ -5,7 +5,6 @@ mod minus_method;
 mod mult_method;
 mod div_method;
 
-
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]
 pub enum ListError {
@@ -33,11 +32,15 @@ pub enum ListError {
 /// 
 /// // Scalar(123)
 /// println!("{:?}", scalar);
+/// 
+/// let arr_1d = Array::new_array_1d(Box::new([1, 2, 5, 7, 0_i32]));
+/// println!("{:?}", arr_1d);
 /// ```
 
 #[derive(Debug)]
 pub enum Array<T>
-where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
+where T:
+Add<Output=T> + Mul<Output=T> + Div<Output=T> 
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default
 {
