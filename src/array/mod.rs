@@ -5,6 +5,8 @@ mod minus_method;
 mod mult_method;
 mod div_method;
 
+mod index_trait;
+
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]
 pub enum ListError {
