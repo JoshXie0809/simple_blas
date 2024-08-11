@@ -32,11 +32,13 @@ pub mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn scalar_index() {
-        // other variant cannot use Index
-        let scalar = Array::Scalar(1);
-        scalar[0];
+        
+        let mut scalar = Array::Scalar(1);
+        assert_eq!(scalar[0], 1);
+        
+        scalar[0] = 123;
+        assert_eq!(scalar, Array::Scalar(123));
     }
 
     #[test]

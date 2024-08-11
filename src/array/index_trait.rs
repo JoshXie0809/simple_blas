@@ -12,9 +12,17 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
     type Output = T;
     fn index(&self, index: usize) -> &Self::Output {
         match self {
+            Array::Scalar(val) => {
+                if index != 0_usize {
+                    panic!("index out of bound");
+                }
+                val
+            },
+
             Array::Array1D { arr } => {
                 &(**arr)[index]
             }
+
             _ => panic!("Mismatched Index"),
         }
     }
@@ -28,6 +36,13 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
 {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match self {
+            Array::Scalar(val) => {
+                if index != 0_usize {
+                    panic!("index out of bound");
+                }
+                val
+            },
+            
             Array::Array1D { arr } => {
                 &mut (**arr)[index]
             }
