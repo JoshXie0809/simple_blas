@@ -28,6 +28,31 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
     }
 }
 
+impl<T> Index<(usize, usize)> for Array<T> 
+where T:
+Add<Output=T> + Mul<Output=T> + Div<Output=T> 
++ PartialEq + AddAssign + Copy + MulAssign + SubAssign
++ Default
+{
+    type Output = T;
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        match self {
+            Array::Array2D { arr, nr, nc, put_val_by_row } => {
+                
+                if *put_val_by_row {
+                    &(**arr)[nc * index.0 + index.1]
+                } else {
+                    &(**arr)[index.0 + nr * index.1]
+                }
+            },
+
+            _ => panic!("Mismatched Index"),
+        }
+    }
+}
+
+
+
 impl<T> IndexMut<usize> for Array<T> 
 where T:
 Add<Output=T> + Mul<Output=T> + Div<Output=T> 

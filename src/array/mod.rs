@@ -13,6 +13,7 @@ pub enum ListError {
     DivisionByZero,
     MismatchedTypes,
     DifferentLength1D,
+    MismatchedDim
 }
 
 
@@ -48,7 +49,17 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
 {
     Null,
     Scalar(T),
-    Array1D{ arr: Box<[T]> },
+    // Vector
+    Array1D { arr: Box<[T]> },
+
+    // Matrix 
+    // nr: number of rows
+    // nc: number of columns
+    Array2D { 
+        arr: Box<[T]>, 
+        nr: usize, nc: usize, 
+        put_val_by_row: bool 
+    }
 }
 
 impl<T> Array<T> 
@@ -69,6 +80,35 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             arr
         }
     }
+
+    pub fn new_array_2d(arr: Box<[T]>, dim: (isize, isize), put_val_by_row: bool) -> Result<Self, ListError> {
+        let mut dim_u = (0_usize, 0_usize);
+        match dim {
+            (x, _)  if x < 0 => {
+                dim_u.0 = (-x) as usize;
+                dim_u.1 = arr.len() / dim_u.0;
+            },
+
+            (_, y)  if y < 0 => {
+                dim_u.1 = (-y) as usize;
+                dim_u.0 = arr.len() / dim_u.1;
+            },
+
+            _ => {
+                dim_u.0 = dim.0 as usize;
+                dim_u.1 = dim.1 as usize;
+            },
+        }
+        
+        if (dim_u.0 * dim_u.1) != arr.len() {
+            return Err(ListError::MismatchedDim);
+        }
+
+        Ok(
+            Array::Array2D { arr, nr: dim_u.0, nc: dim_u.1, put_val_by_row }
+        )
+
+    }
 }
 
 impl<T> PartialEq for Array<T>
@@ -78,17 +118,36 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
+            (_, Self::Null) => false,
+            (Self::Null, _) => false,
+
             (Self::Scalar(x), Self::Scalar(y)) => *x == *y,
             
             (Self::Array1D { arr: arr1 }, 
              Self::Array1D { arr: arr2 })
                 => arr1 == arr2,
+            
+            (Self::Array2D { arr: arr1, nr: nr1, nc: nc1, put_val_by_row: by_row1 },
+             Self::Array2D { arr: arr2, nr: nr2, nc: nc2, put_val_by_row: by_row2 }
+            ) => {
+                if (nr1, nc1) != (nr2, nc2) {return  false;}
+                if by_row1 == by_row2 {
+                   return arr1 == arr2;
+                }
 
-            (_, Self::Null) => false,
-            (Self::Null, _) => false,
-
+                for r in 0..(*nr1) {
+                    for c in 0..(*nr2) {
+                        if self[(r, c)] != other[(r, c)] {
+                            return false;
+                        }
+                    
+                    }
+                }
+                
+                true
+            }, 
+            
             _ =>  panic!("cannot compare!!"),
         }
-        
     }
 }

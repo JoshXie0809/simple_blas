@@ -1,6 +1,6 @@
 #[cfg(test)]
 pub mod tests {
-    use simple_blas::array::Array;
+    use simple_blas::array::{Array, ListError};
     // use simple_blas::array::ListError;
 
     #[test]
@@ -23,6 +23,34 @@ pub mod tests {
         let other_arr = 
             Array::Array1D { arr: Box::new([1.023, 1.1123]) };
         assert_eq!(result, other_arr);
+    }
+
+    #[test]
+    fn new_a_array_2d() -> Result<(), ListError>{
+        let arr = Box::new([1, 2, 3, 4]);
+        let dim = (2, 2);
+        let put_val_by_row = true;
+        let arr_2d = Array::new_array_2d(arr, dim, put_val_by_row)?;
+
+        let other_arr_2d = Array::Array2D {
+             arr: Box::new([1, 2, 3, 4]), 
+             nr: 2_usize, 
+             nc: 2_usize,
+             put_val_by_row
+        };
+
+        assert_eq!(arr_2d, other_arr_2d);
+
+        let other_arr_2d = Array::Array2D {
+            arr: Box::new([1, 2, 3, 4]), 
+            nr: 2_usize, 
+            nc: 2_usize,
+            put_val_by_row: false
+       };
+
+       assert_ne!(arr_2d, other_arr_2d);
+
+        Ok(())
     }
 
     #[test]
