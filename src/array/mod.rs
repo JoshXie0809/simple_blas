@@ -4,6 +4,7 @@ mod add_method;
 mod minus_method;
 mod mult_method;
 mod div_method;
+mod convert_method;
 
 mod index_trait;
 
@@ -143,7 +144,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     
                     }
                 }
-                
+
                 true
             }, 
             
