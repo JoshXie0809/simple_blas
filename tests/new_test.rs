@@ -27,28 +27,37 @@ pub mod tests {
 
     #[test]
     fn new_a_array_2d() -> Result<(), ListError>{
-        let arr = Box::new([1, 2, 3, 4]);
-        let dim = (2, 2);
+        let arr = Box::new([1, 2, 3, 4, 5, 6]);
+        let dim = (2, 3);
         let put_val_by_row = true;
         let arr_2d = Array::new_array_2d(arr, dim, put_val_by_row)?;
 
         let other_arr_2d = Array::Array2D {
-             arr: Box::new([1, 2, 3, 4]), 
+             arr: Box::new([1, 2, 3, 4, 5, 6]), 
              nr: 2_usize, 
-             nc: 2_usize,
+             nc: 3_usize,
              put_val_by_row
         };
 
         assert_eq!(arr_2d, other_arr_2d);
 
         let other_arr_2d = Array::Array2D {
-            arr: Box::new([1, 2, 3, 4]), 
+            arr: Box::new([1, 2, 3, 4, 5, 6]), 
             nr: 2_usize, 
-            nc: 2_usize,
+            nc: 3_usize,
             put_val_by_row: false
        };
 
        assert_ne!(arr_2d, other_arr_2d);
+
+       let other_arr_2d = Array::Array2D {
+            arr: Box::new([1, 4, 2, 5, 3, 6]), 
+            nr: 2_usize, 
+            nc: 3_usize,
+            put_val_by_row: false
+        };
+
+        assert_eq!(arr_2d, other_arr_2d);
 
         Ok(())
     }
