@@ -21,7 +21,7 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             Array::Array1D { arr } => {
                 &(**arr)[index]
-            }
+            },
 
             _ => panic!("Mismatched Index"),
         }
@@ -42,10 +42,11 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 }
                 val
             },
-            
+
             Array::Array1D { arr } => {
                 &mut (**arr)[index]
-            }
+            },
+
             _ => panic!("Mismatched Index"),
         }
     }
