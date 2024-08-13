@@ -108,7 +108,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(
             Array::Array2D { arr, nr: dim_u.0, nc: dim_u.1, put_val_by_row }
         )
-
     }
 }
 

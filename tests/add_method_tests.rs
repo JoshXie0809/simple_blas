@@ -38,4 +38,44 @@ pub mod tests {
         Ok(())
     }
 
+    #[test]
+    fn add_method_array_2d_1() {
+        let mut arr1 = Array::Array2D { 
+            arr: Box::new([1, 2, 3, 4]), nr: 2, nc: 2, put_val_by_row: true
+        };
+
+        let arr2 = Array::Array2D { 
+            arr: Box::new([1, 3, 2, 4]), nr: 2, nc: 2, put_val_by_row: false
+        };
+
+        let _ = arr1.add(&arr2);
+
+        assert_eq!(
+            arr1,
+            Array::Array2D { 
+                arr: Box::new([2, 4, 6, 8]), nr: 2, nc: 2, put_val_by_row: true
+            }   
+        )
+    }
+
+    #[test]
+    fn add_method_array_2d_2() {
+        let mut arr1 = Array::Array2D { 
+            arr: Box::new([1, 2, 3, 4]), nr: 2, nc: 2, put_val_by_row: false
+        };
+
+        let arr2 = Array::Array2D { 
+            arr: Box::new([1, 3, 2, 4]), nr: 2, nc: 2, put_val_by_row: true
+        };
+
+        let _ = arr1.add(&arr2);
+
+        assert_eq!(
+            arr1,
+            Array::Array2D { 
+                arr: Box::new([2, 6, 4, 8]), nr: 2, nc: 2, put_val_by_row: true
+            }   
+        )
+    }
+
 }

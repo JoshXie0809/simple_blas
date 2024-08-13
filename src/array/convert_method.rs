@@ -7,7 +7,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default
 {
-    pub fn convert_to_scalar(&mut self, val: T) -> Result<(), ListError>{
+    pub fn convert_to_scalar(&mut self, val: T) -> Result<(), ListError> {
         match self {
             Array::Null => {
                 *self = Array::new_scalar(val);
