@@ -52,7 +52,6 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
 }
 
 
-
 impl<T> IndexMut<usize> for Array<T> 
 where T:
 Add<Output=T> + Mul<Output=T> + Div<Output=T> 
@@ -86,7 +85,6 @@ Add<Output=T> + Mul<Output=T> + Div<Output=T>
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         match self {
             Array::Array2D { arr, nr, nc, put_val_by_row } => {
-                
                 if *put_val_by_row {
                     &mut arr[*nc * index.0 + index.1]
                 } else {

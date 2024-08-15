@@ -9,8 +9,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 + Default
 {
     
-    pub fn mult(&mut self, other: &Self) -> Result<(), ListError>{
-        match (self, other) {
+    pub fn mult(&mut self, other: &Self) -> Result<(), ListError> {
+        
+        match (self, &other) {
             (Self::Scalar(x), Self::Scalar(y)) 
                 => *x *= *y,
             

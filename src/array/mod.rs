@@ -140,7 +140,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                         if self[(r, c)] != other[(r, c)] {
                             return false;
                         }
-                    
                     }
                 }
 
