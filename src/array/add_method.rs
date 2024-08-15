@@ -72,5 +72,4 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         Ok(())
     }
-
 }

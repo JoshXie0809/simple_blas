@@ -52,7 +52,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                         return Err(ListError::MismatchedDim);
                     }
                     
-                    Array::arr_2d_div(*by_row1, *by_row2, arr1, arr2, *nr1, *nc1);
+                    Self::arr_2d_div(*by_row1, *by_row2, arr1, arr2, *nr1, *nc1);
                 },
             
             _ => return Err(ListError::MismatchedTypes),
@@ -60,8 +60,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         Ok(())
     }
-
-
 
     fn arr_2d_div(by_row1: bool, by_row2: bool, arr1: &mut Box<[T]>, arr2: &Box<[T]>, nr1: usize, nc1: usize) {
         match (by_row1, by_row2) {
@@ -88,7 +86,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             },
         }
     }
-
 }
 
 
