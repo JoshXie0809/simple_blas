@@ -47,4 +47,34 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn div_method_array_2d_1() -> Result<(), ListError>{
+        
+        let mut arr1 = Array::new_array_2d(
+            Box::new([1, 3, 5, 2, 4, 6]), 
+            (2, 3), 
+            false
+        )?; 
+
+        let arr2 = Array::new_array_2d(
+            Box::new([2, 3, 4, 5, 6, 7]), 
+            (2, 3), 
+            true
+        )?;
+        
+
+        arr1.div(&arr2)?;
+
+        assert_eq!(arr1,
+        Array::new_array_2d(
+            Box::new([0, 1, 1, 0, 0, 0]), 
+            (2, 3), 
+            true)?
+        );
+
+        Ok(())
+
+
+    }
+
 }

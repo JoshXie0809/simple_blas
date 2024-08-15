@@ -38,4 +38,34 @@ pub mod tests {
         Ok(())
     }
 
+    #[test]
+    fn mult_method_array_2d_1() -> Result<(), ListError>{
+        
+        let mut arr1 = Array::new_array_2d(
+            Box::new([1, 2, 3, 4, 5, 6]), 
+            (2, 3), 
+            false
+        )?;
+
+        let arr2 = Array::new_array_2d(
+            Box::new([1, 2, 3, 4, 5, 6]), 
+            (2, 3), 
+            true
+        )?;
+        
+
+        arr1.mult(&arr2)?;
+
+        assert_eq!(arr1,
+        Array::new_array_2d(
+            Box::new([1, 8, 6, 20, 15, 36]), 
+            (2, 3), 
+            false)?
+        );
+
+        Ok(())
+
+
+    }
+
 }

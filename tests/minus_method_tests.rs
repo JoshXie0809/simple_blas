@@ -38,4 +38,34 @@ pub mod tests {
         Ok(())
     }
 
+    #[test]
+    fn minus_method_array_2d_1() -> Result<(), ListError>{
+        
+        let mut arr1 = Array::new_array_2d(
+            Box::new([1, 2, 3, 4, 5, 6]), 
+            (2, 3), 
+            false
+        )?;
+
+        let arr2 = Array::new_array_2d(
+            Box::new([1, 2, 3, 4, 5, 6]), 
+            (2, 3), 
+            true
+        )?;
+        
+
+        arr1.minus(&arr2)?;
+
+        assert_eq!(arr1,
+        Array::new_array_2d(
+            Box::new([0, 1, 2, -2, -1, 0]), 
+            (2, 3), 
+            true)?
+        );
+
+        Ok(())
+
+
+    }
+
 }

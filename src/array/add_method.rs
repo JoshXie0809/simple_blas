@@ -42,16 +42,28 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MismatchedDim);
                 }
 
-                if by_row1 == by_row2 {
-                    for i in 0..(arr1.len()) {
-                        arr1[i] += arr2[i];
-                    }
-                } else {
-                    for r in 0..(*nr1) {
-                        for c in 0..(*nc1) {
-                            arr1[r * (*nc1) + c] += arr2[c * (*nr1) + r];
+                match (by_row1, by_row2) {
+                    (true, false) => {
+                        for r in 0..(*nr1) {
+                            for c in 0..(*nc1) {
+                                arr1[r * (*nc1) + c] += arr2[c * (*nr1) + r];
+                            }
                         }
-                    }
+                    },
+
+                    (false, true) => {
+                        for r in 0..(*nr1) {
+                            for c in 0..(*nc1) {
+                                arr1[c * (*nr1) + r] += arr2[r * (*nc1) + c];
+                            }
+                        }
+                    },
+
+                    _ => {
+                        for i in 0..(arr1.len()) {
+                            arr1[i] += arr2[i];
+                        }
+                    },
                 }
             },
             
