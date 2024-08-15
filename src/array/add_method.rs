@@ -42,34 +42,38 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MismatchedDim);
                 }
 
-                match (by_row1, by_row2) {
-                    (true, false) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[r * (*nc1) + c] += arr2[c * (*nr1) + r];
-                            }
-                        }
-                    },
-
-                    (false, true) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[c * (*nr1) + r] += arr2[r * (*nc1) + c];
-                            }
-                        }
-                    },
-
-                    _ => {
-                        for i in 0..(arr1.len()) {
-                            arr1[i] += arr2[i];
-                        }
-                    },
-                }
+                Array::arr_2d_add(*by_row1, *by_row2, arr1, arr2, *nr1, *nc1);
             },
             
             _ => {return Err(ListError::MismatchedTypes)},
         }
 
         Ok(())
+    }
+
+    fn arr_2d_add(by_row1: bool, by_row2: bool, arr1: &mut Box<[T]>, arr2: &Box<[T]>, nr1: usize, nc1: usize) {
+        match (by_row1, by_row2) {
+            (true, false) => {
+                for r in 0..(nr1) {
+                    for c in 0..(nc1) {
+                        arr1[r * (nc1) + c] += arr2[c * (nr1) + r];
+                    }
+                }
+            },
+
+            (false, true) => {
+                for r in 0..(nr1) {
+                    for c in 0..(nc1) {
+                        arr1[c * (nr1) + r] += arr2[r * (nc1) + c];
+                    }
+                }
+            },
+
+            _ => {
+                for i in 0..(arr1.len()) {
+                    arr1[i] += arr2[i];
+                }
+            },
+        }
     }
 }
