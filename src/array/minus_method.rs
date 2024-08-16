@@ -2,6 +2,7 @@ use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
 
 use super::Array;
 use super::ListError;
+use crate::array::{idxr, idxc};
 
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
@@ -40,11 +41,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MismatchedDim);
                 }
 
+                let (nr, nc) = (*nr1, *nc1);
+
                 match (by_row1, by_row2) {
                     (true, false) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[r * (*nc1) + c] -= arr2[c * (*nr1) + r];
+                        for r in 0..(nr) {
+                            for c in 0..(nc) {
+                                arr1[idxr(r, c, nc)] -= arr2[idxc(r, c, nr)];
                             }
                         }
                     },
@@ -52,11 +55,12 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     (false, true) => {
                         for r in 0..(*nr1) {
                             for c in 0..(*nc1) {
-                                arr1[c * (*nr1) + r] -= arr2[r * (*nc1) + c];
+                                arr1[idxc(r, c, nr)] -= arr2[idxr(r, c, nc)];
                             }
                         }
                     },
-
+                    
+                    // (true, true) or (false, false)
                     _ => {
                         for i in 0..(arr1.len()) {
                             arr1[i] -= arr2[i];

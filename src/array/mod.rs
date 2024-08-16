@@ -8,6 +8,15 @@ mod convert_method;
 
 mod index_trait;
 
+pub(crate) fn idxr(r: usize, c: usize, nc: usize) -> usize {
+    r * nc + c
+}
+
+pub(crate) fn idxc(r: usize, c: usize, nr: usize) -> usize {
+    c * nr + r
+}
+
+
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]
 pub enum ListError {
@@ -109,6 +118,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             Array::Array2D { arr, nr: dim_u.0, nc: dim_u.1, put_val_by_row }
         )
     }
+
 }
 
 impl<T> PartialEq for Array<T>
