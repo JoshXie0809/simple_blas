@@ -9,7 +9,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default
 {
-
     pub fn add(&mut self, other: &Self) -> Result<(), ListError> {
         
         match (self, other) {

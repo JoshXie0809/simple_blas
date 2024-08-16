@@ -5,6 +5,7 @@ mod minus_method;
 mod mult_method;
 mod div_method;
 mod convert_method;
+mod mmult_method;
 
 mod index_trait;
 
@@ -23,7 +24,8 @@ pub enum ListError {
     DivisionByZero,
     MismatchedTypes,
     DifferentLength1D,
-    MismatchedDim
+    MismatchedDim,
+    MatrixMultMismatchedDim
 }
 
 
@@ -140,13 +142,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             (Self::Array2D { arr: arr1, nr: nr1, nc: nc1, put_val_by_row: by_row1 },
              Self::Array2D { arr: arr2, nr: nr2, nc: nc2, put_val_by_row: by_row2 }
             ) => {
-                if (nr1, nc1) != (nr2, nc2) {return  false;}
+                if (*nr1, *nc1) != (*nr2, *nc2) {return  false;}
                 if by_row1 == by_row2 {
                    return arr1 == arr2;
                 }
 
                 for r in 0..(*nr1) {
-                    for c in 0..(*nr2) {
+                    for c in 0..(*nc1) {
                         if self[(r, c)] != other[(r, c)] {
                             return false;
                         }
