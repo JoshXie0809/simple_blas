@@ -4,7 +4,6 @@ use super::Array;
 use super::ListError;
 use crate::array::{idxr, idxc};
 
-
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
