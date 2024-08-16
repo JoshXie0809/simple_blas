@@ -6,6 +6,7 @@ mod mult_method;
 mod div_method;
 mod convert_method;
 mod mmult_method;
+mod mdet_method;
 
 mod index_trait;
 
@@ -25,7 +26,8 @@ pub enum ListError {
     MismatchedTypes,
     DifferentLength1D,
     MismatchedDim,
-    MatrixMultMismatchedDim
+    MatrixMultMismatchedDim,
+    MatrixDetDimError,
 }
 
 
