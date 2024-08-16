@@ -8,12 +8,12 @@ mod convert_method;
 
 mod index_trait;
 
-pub(crate) fn idxr(r: usize, c: usize, nc: usize) -> usize {
-    r * nc + c
+pub(crate) fn idxr(r: usize, c: usize, dim: (usize, usize)) -> usize {
+    r * dim.1 + c
 }
 
-pub(crate) fn idxc(r: usize, c: usize, nr: usize) -> usize {
-    c * nr + r
+pub(crate) fn idxc(r: usize, c: usize, dim: (usize, usize)) -> usize {
+    c * dim.0 + r
 }
 
 

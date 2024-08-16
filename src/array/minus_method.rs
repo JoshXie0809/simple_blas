@@ -41,25 +41,25 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MismatchedDim);
                 }
 
-                let (nr, nc) = (*nr1, *nc1);
+                let dim: (usize, usize) = (*nr1, *nc1);
 
                 match (by_row1, by_row2) {
                     (true, false) => {
-                        for r in 0..(nr) {
-                            for c in 0..(nc) {
-                                arr1[idxr(r, c, nc)] -= arr2[idxc(r, c, nr)];
+                        for r in 0..(dim.0) {
+                            for c in 0..(dim.1) {
+                                arr1[idxr(r, c, dim)] -= arr2[idxc(r, c, dim)];
                             }
                         }
                     },
 
                     (false, true) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[idxc(r, c, nr)] -= arr2[idxr(r, c, nc)];
+                        for r in 0..(dim.0) {
+                            for c in 0..(dim.1) {
+                                arr1[idxc(r, c, dim)] -= arr2[idxr(r, c, dim)];
                             }
                         }
                     },
-                    
+
                     // (true, true) or (false, false)
                     _ => {
                         for i in 0..(arr1.len()) {
