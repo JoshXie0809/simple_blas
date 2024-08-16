@@ -55,55 +55,23 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         arr1: &mut Box<[T]>, arr2: &Box<[T]>, old_arr: Box<[T]>, 
         new_dim: (usize, usize), 
         ni: usize, 
-        old_by_row: bool, by_row2: bool) {
+        old_by_row: bool, by_row2: bool) 
+    {
+        let index_old: fn(usize, usize, (usize, usize)) -> usize =  if old_by_row { idxr } else { idxc };
+        let index_other: fn(usize, usize, (usize, usize)) -> usize = if by_row2 { idxr } else { idxc };
 
-        match (old_by_row, by_row2) {
-            (true, true) => {
-                for r in 0..(new_dim.0) {
-                    for c in 0..(new_dim.1) {
-                        let mut sum = T::default();
-                        for i in 0..(ni) {
-                            sum += old_arr[idxr(r, i, (new_dim.0, ni))] * arr2[idxr(i, c, (ni, new_dim.1))]
-                        }
-                        arr1[idxr(r, c, new_dim)] = sum;
-                    }
+        for r in 0..new_dim.0 {
+            for c in 0..new_dim.1 {
+                let mut sum = T::default();
+                for i in 0..ni {
+                    sum += 
+                    
+                    old_arr[index_old(r, i, (new_dim.0, ni))] 
+                    * 
+                    arr2[index_other(i, c, (ni, new_dim.1))];
+                    
                 }
-            },
-
-            (true, false) => {
-                for r in 0..(new_dim.0) {
-                    for c in 0..(new_dim.1) {
-                        let mut sum = T::default();
-                        for i in 0..(ni) {
-                            sum += old_arr[idxr(r, i, (new_dim.0, ni))] * arr2[idxc(i, c, (ni, new_dim.1))]
-                        }
-                        arr1[idxr(r, c, new_dim)] = sum;
-                    }
-                }
-            },
-
-            (false, true) => {
-                for r in 0..(new_dim.0) {
-                    for c in 0..(new_dim.1) {
-                        let mut sum = T::default();
-                        for i in 0..(ni) {
-                            sum += old_arr[idxc(r, i, (new_dim.0, ni))] * arr2[idxr(i, c, (ni, new_dim.1))]
-                        }
-                        arr1[idxr(r, c, new_dim)] = sum;
-                    }
-                }
-            },
-
-            (false, false) => {
-                for r in 0..(new_dim.0) {
-                    for c in 0..(new_dim.1) {
-                        let mut sum = T::default();
-                        for i in 0..(ni) {
-                            sum += old_arr[idxc(r, i, (new_dim.0, ni))] * arr2[idxc(i, c, (ni, new_dim.1))]
-                        }
-                        arr1[idxr(r, c, new_dim)] = sum;
-                    }
-                }
+                arr1[idxr(r, c, new_dim)] = sum;
             }
         }
         
