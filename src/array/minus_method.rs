@@ -41,32 +41,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MismatchedDim);
                 }
 
-                let dim: (usize, usize) = (*nr1, *nc1);
-
-                match (by_row1, by_row2) {
-                    (true, false) => {
-                        for r in 0..(dim.0) {
-                            for c in 0..(dim.1) {
-                                arr1[idxr(r, c, dim)] -= arr2[idxc(r, c, dim)];
-                            }
-                        }
-                    },
-
-                    (false, true) => {
-                        for r in 0..(dim.0) {
-                            for c in 0..(dim.1) {
-                                arr1[idxc(r, c, dim)] -= arr2[idxr(r, c, dim)];
-                            }
-                        }
-                    },
-
-                    // (true, true) or (false, false)
-                    _ => {
-                        for i in 0..(arr1.len()) {
-                            arr1[i] -= arr2[i];
-                        }
-                    },
-                }
+                Array::arr_2d_minus(*by_row1, *by_row2, arr1, arr2, *nr1, *nc1);
             },
 
             _ => {return Err(ListError::MismatchedTypes)},
@@ -74,4 +49,33 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         Ok(())
     }
+
+    fn arr_2d_minus(by_row1: bool, by_row2: bool, arr1: &mut Box<[T]>, arr2: &Box<[T]>, nr1: usize, nc1: usize) {
+        let dim: (usize, usize) = (nr1, nc1);
+
+        match (by_row1, by_row2) {
+            (true, false) => {
+                for r in 0..(nr1) {
+                    for c in 0..(nc1) {
+                        arr1[idxr(r, c, dim)] -= arr2[idxc(r, c, dim)];
+                    }
+                }
+            },
+
+            (false, true) => {
+                for r in 0..(nr1) {
+                    for c in 0..(nc1) {
+                        arr1[idxc(r, c, dim)] -= arr2[idxr(r, c, dim)];
+                    }
+                }
+            },
+
+            _ => {
+                for i in 0..(arr1.len()) {
+                    arr1[i] -= arr2[i];
+                }
+            },
+        }
+    }
+
 }

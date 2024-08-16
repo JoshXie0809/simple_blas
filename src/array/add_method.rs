@@ -2,6 +2,8 @@ use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
 
 use super::Array;
 use super::ListError;
+use crate::array::{idxr, idxc};
+
 
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
@@ -17,7 +19,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             
             (Self::Array1D { arr: arr1 }, 
              Self::Array1D { arr: arr2 }) => {
-                let len1 = arr1.len();
+                let len1: usize = arr1.len();
                 if len1 != arr2.len() {
                     return Err(ListError::DifferentLength1D);
                 }
@@ -52,11 +54,14 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     }
 
     fn arr_2d_add(by_row1: bool, by_row2: bool, arr1: &mut Box<[T]>, arr2: &Box<[T]>, nr1: usize, nc1: usize) {
+        let dim: (usize, usize) = (nr1, nc1);
+
         match (by_row1, by_row2) {
+            
             (true, false) => {
                 for r in 0..(nr1) {
                     for c in 0..(nc1) {
-                        arr1[r * (nc1) + c] += arr2[c * (nr1) + r];
+                        arr1[idxr(r, c, dim)] += arr2[idxc(r, c, dim)];
                     }
                 }
             },
@@ -64,7 +69,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             (false, true) => {
                 for r in 0..(nr1) {
                     for c in 0..(nc1) {
-                        arr1[c * (nr1) + r] += arr2[r * (nc1) + c];
+                        arr1[idxc(r, c, dim)] += arr2[idxr(r, c, dim)];
                     }
                 }
             },
@@ -76,4 +81,5 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             },
         }
     }
+
 }
