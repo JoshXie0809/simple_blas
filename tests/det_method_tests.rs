@@ -2,7 +2,10 @@
 pub mod tests {
     use simple_blas::array::{Array, ListError};
 
-    // calc determinat for a matrix only for f32, f64
+    // calc determinat for a matrix 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!
+    // !!! only for f32, f64 !!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!
 
     #[test]
     fn mat_det_array_2d_1() -> Result<(), ListError>{
@@ -33,6 +36,23 @@ pub mod tests {
             assert_eq!(error, ListError::MatrixDetDimError)
         };
  
+        Ok(())
+    }
+
+    #[test]
+    fn permutation_array_2d() -> Result<(), ListError> {
+        let mut arr = Array::new_array_2d(
+            Box::new([3, 4, 1, 2, 5, 6]), (3, 2), true)?;
+        
+        let p: Vec<(usize, usize)> = arr.permute()?;
+
+        assert_eq!(
+            arr,
+            Array::new_array_2d(Box::new([5, 6, 3, 4, 1, 2]), (3, 2), true)?
+        );
+
+        println!("{:?}", p);
+
         Ok(())
     }
 }
