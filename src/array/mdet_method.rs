@@ -29,7 +29,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         
         // if SQUARE matrix
         // nr = nc = n
-        Array::gaussian_eliminate(arr, by_row, (n, n), p);
+        let dim = (n, n);
+        Array::gaussian_eliminate(arr, by_row, dim, p);
 
         // compute sign and UPPER TRIANGULAR matrix's determinant
         let mut det = T::from( 1.0_f32 );
@@ -46,26 +47,42 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     pub(crate) fn gaussian_eliminate(arr: &mut Box<[T]>, by_row: bool, dim: (usize, usize), p: &mut Vec<(usize, usize)>) {
 
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        let (nr, nc) = dim;
         let z: T = T::default();
 
+        let (nr, nc) = dim;
         let n = if nr < nc {nr} else {nc};
         
         for r in 0..n {
+            // do permutation if (r, r) is not max
+            // if find other do swap_row(r, maxr)
+            // find max abs(val) under (r, r) element
             Array::permute_r(arr, r, dim, z, p, idx);
+            
+            // eliminate val under (r, r)
+            Array::gaussian_eliminate_r(arr, r, dim, idx);
+        }
+    }
 
-            for r2 in (r+1)..nr {
+    pub(crate) fn gaussian_eliminate_r(arr: &mut Box<[T]>, 
+        r: usize, dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize) 
+    {
+        // eliminate those rows under rth row
+        // to get row echelon form
 
-                let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];
-                arr[idx(r2, r, dim)] = T::default();
+        let (nr, nc) = dim;
 
-                for c2 in (r+1)..nc {
-                    arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
-                }
+        for r2 in (r+1)..nr {
+
+            let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];
+            arr[idx(r2, r, dim)] = T::default();
+
+            for c2 in (r+1)..nc {
+                arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
             }
         }
-
     }
+
 }
 
 impl<T> Array<T>
