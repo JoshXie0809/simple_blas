@@ -51,6 +51,21 @@ pub mod tests {
         arr.mmult(&arr2)?;
 
         println!("{:?}", arr);
+
+        let real_inv = Array::new_array_2d(
+            Box::new([1.0, 0.0, 0.0,
+                           0.0, 1.0, 0.0,
+                           0.0, 0.0, 1.0]), 
+            (3, 3), 
+            true
+        )?;
+
+        let tol: f64 = 1e-10;
+
+        let diff: f64 = Array::compute_dist(&arr, &real_inv)?;
+
+        assert!(diff < tol);
+
         Ok(())
     }
 }
