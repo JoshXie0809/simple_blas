@@ -40,6 +40,26 @@ pub mod tests {
     }
 
     #[test]
+    fn mat_det_array_2d_3() -> Result<(), ListError>{
+
+        // only SQUARE matrix can calc det
+
+        let arr1: Array<f64> = Array::new_array_2d(
+            Box::new([31.0, 0.0, 0.0, 
+                          2.0, 45.0, 0.0,
+                          0.0, 14.2, -9.0]), (3,3), true
+        )?;
+
+        let det: f64 = arr1.mdet()?;
+        let true_val: f64 = 31.0 * 45.0 * (-9.0);
+        let tol: f64 = 1e-10;
+
+        assert!( (det - true_val).abs() < tol );
+ 
+        Ok(())
+    }
+
+    #[test]
     fn permutation_array_2d() -> Result<(), ListError> {
         let mut arr = Array::new_array_2d(
             Box::new([3, 4, 1, 2, -5, -6]), (3, 2), true)?;
@@ -53,4 +73,6 @@ pub mod tests {
 
         Ok(())
     }
+
+    
 }
