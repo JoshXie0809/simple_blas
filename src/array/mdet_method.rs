@@ -26,7 +26,12 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     }
 
     pub(crate) fn gaussian_det(arr: &mut Box<[T]>, p: &mut Vec<(usize, usize)>, n: usize, by_row: bool) -> T {
+        
+        // if SQUARE matrix
+        // nr = nc = n
         Array::gaussian_eliminate(arr, by_row, (n, n), p);
+
+        // compute sign and UPPER TRIANGULAR matrix's determinant
         let mut det = T::from( 1.0_f32 );
         let num_swp = (p.len() % 2) as i32;
         let sign = T::from( (1.0_f32).powi(num_swp) );
@@ -41,7 +46,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     pub(crate) fn gaussian_eliminate(arr: &mut Box<[T]>, by_row: bool, dim: (usize, usize), p: &mut Vec<(usize, usize)>) {
 
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        // nr = nc = n
         let (nr, nc) = dim;
         let z: T = T::default();
 

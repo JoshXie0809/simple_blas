@@ -1,3 +1,5 @@
+// mat_mult
+
 #[cfg(test)]
 pub mod tests {
     use simple_blas::array::{Array, ListError};

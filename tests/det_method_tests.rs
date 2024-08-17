@@ -19,7 +19,7 @@ pub mod tests {
         if let Err(error) = arr1.mdet() {
             assert_eq!(error, ListError::MatrixDetDimError)
         };
- 
+         
         Ok(())
     }
 
