@@ -49,10 +49,11 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
                 let mut p: Vec<(usize, usize)> = vec![];
 
+                let dim: (usize, usize) = (nr, nc);
+                
                 for r in 0..(nr-1) {
                     // now is rth row
                     // assume max element on this row
-                    let dim: (usize, usize) = (nr, nc);
                     let mut maxr = r;
                     let mut maxv = arr[idx(r, r, dim)];
 
