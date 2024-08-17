@@ -64,51 +64,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     }
 }
 
-#[cfg(test)]
-pub mod tests {
-    use crate::array::Array;
-
-    #[test]
-    fn gaussian_eliminate_1() {
-
-        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let mut arr: Box<[f64]> = arr.into_boxed_slice();
-        let mut p: Vec<(usize, usize)> = vec![];
-
-        Array::gaussian_eliminate(&mut arr, false, (4, 2), &mut p);
-        let arr2: Vec<f64> = Vec::from([4.0, 0.0, 0.0, 0.0, 8.0, 3.0, 0.0, 0.0]);
-        let arr2: Box<[f64]> = arr2.into_boxed_slice();
-        assert_eq!(arr, arr2);
-    }
-
-    #[test]
-    fn gaussian_eliminate_2() {
-
-        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        let mut arr: Box<[f64]> = arr.into_boxed_slice();
-        let mut p: Vec<(usize, usize)> = vec![];
-
-        Array::gaussian_eliminate(&mut arr, false, (3, 3), &mut p);
-        let arr2: Vec<f64> = Vec::from([3.0, 0.0, 0.0, 6.0, 2.0, 0.0, 9.0, 4.0, 0.0]);
-        let arr2: Box<[f64]> = arr2.into_boxed_slice();
-        assert_eq!(arr, arr2);
-    }
-
-    #[test]
-    fn gaussian_eliminate_3() {
-
-        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let mut arr: Box<[f64]> = arr.into_boxed_slice();
-        let mut p: Vec<(usize, usize)> = vec![];
-
-        Array::gaussian_eliminate(&mut arr, false, (2, 4), &mut p);
-        let arr2: Vec<f64> = Vec::from([2.0, 0.0, 4.0, 1.0, 6.0, 2.0, 8.0, 3.0]);
-        let arr2: Box<[f64]> = arr2.into_boxed_slice();
-        assert_eq!(arr, arr2);
-    }
-}
-
-
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
@@ -140,7 +95,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         }
     }
 
-    fn permute_r(
+    pub(crate) fn permute_r(
         arr: &mut Box<[T]>, 
         r:usize, dim: (usize, usize), z: T, 
         p: &mut Vec<(usize, usize)>,
@@ -189,4 +144,49 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     }
 }
 
+
+
+#[cfg(test)]
+pub mod tests {
+    use crate::array::Array;
+
+    #[test]
+    fn gaussian_eliminate_1() {
+
+        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let mut arr: Box<[f64]> = arr.into_boxed_slice();
+        let mut p: Vec<(usize, usize)> = vec![];
+
+        Array::gaussian_eliminate(&mut arr, false, (4, 2), &mut p);
+        let arr2: Vec<f64> = Vec::from([4.0, 0.0, 0.0, 0.0, 8.0, 3.0, 0.0, 0.0]);
+        let arr2: Box<[f64]> = arr2.into_boxed_slice();
+        assert_eq!(arr, arr2);
+    }
+
+    #[test]
+    fn gaussian_eliminate_2() {
+
+        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        let mut arr: Box<[f64]> = arr.into_boxed_slice();
+        let mut p: Vec<(usize, usize)> = vec![];
+
+        Array::gaussian_eliminate(&mut arr, false, (3, 3), &mut p);
+        let arr2: Vec<f64> = Vec::from([3.0, 0.0, 0.0, 6.0, 2.0, 0.0, 9.0, 4.0, 0.0]);
+        let arr2: Box<[f64]> = arr2.into_boxed_slice();
+        assert_eq!(arr, arr2);
+    }
+
+    #[test]
+    fn gaussian_eliminate_3() {
+
+        let arr: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let mut arr: Box<[f64]> = arr.into_boxed_slice();
+        let mut p: Vec<(usize, usize)> = vec![];
+
+        Array::gaussian_eliminate(&mut arr, false, (2, 4), &mut p);
+        let arr2: Vec<f64> = Vec::from([2.0, 0.0, 4.0, 1.0, 6.0, 2.0, 8.0, 3.0]);
+        let arr2: Box<[f64]> = arr2.into_boxed_slice();
+        assert_eq!(arr, arr2);
+    }
+}
 
