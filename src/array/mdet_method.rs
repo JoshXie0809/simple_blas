@@ -89,11 +89,11 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                   dim: (usize, usize)) 
         {
 
-        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        
-        for c in begin_col..end_col {
-            (arr[idx(i, c, dim)], arr[idx(j, c, dim)]) = 
-            (arr[idx(j, c, dim)], arr[idx(i, c, dim)]);
+            let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+            
+            for c in begin_col..end_col {
+                (arr[idx(i, c, dim)], arr[idx(j, c, dim)]) = 
+                (arr[idx(j, c, dim)], arr[idx(i, c, dim)]);
         }
     }
 }
