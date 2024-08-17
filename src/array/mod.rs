@@ -1,23 +1,18 @@
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
 
+
 mod add_method;
 mod minus_method;
 mod mult_method;
 mod div_method;
 mod convert_method;
+
+// for matrix
 mod mmult_method;
 mod mdet_method;
+mod inv_method;
 
 mod index_trait;
-
-pub(crate) fn idxr(r: usize, c: usize, dim: (usize, usize)) -> usize {
-    r * dim.1 + c
-}
-
-pub(crate) fn idxc(r: usize, c: usize, dim: (usize, usize)) -> usize {
-    c * dim.0 + r
-}
-
 
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]
@@ -28,8 +23,19 @@ pub enum ListError {
     MismatchedDim,
     MatrixMultMismatchedDim,
     MatrixDetDimError,
+    MatrixInvDimError,
+    SigularMat,
 }
 
+/// index for put value by row
+pub(crate) fn idxr(r: usize, c: usize, dim: (usize, usize)) -> usize {
+    r * dim.1 + c
+}
+
+/// index for put value by column
+pub(crate) fn idxc(r: usize, c: usize, dim: (usize, usize)) -> usize {
+    c * dim.0 + r
+}
 
 /// ## Three possible Type (Now, Matrix will add later)
 /// -1 Null: store nothing

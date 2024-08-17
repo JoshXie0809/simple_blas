@@ -57,29 +57,30 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
             // if find other do swap_row(r, maxr)
             // find max abs(val) under (r, r) element
             Array::permute_r(arr, r, dim, z, p, idx);
-            
+
             // eliminate val under (r, r)
-            Array::gaussian_eliminate_r(arr, r, dim, idx);
+            for r2 in (r+1)..nr {
+                let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];                
+                Array::gaussian_eliminate_r(arr, r, r2, dim, factor, idx);
+            }
         }
     }
 
-    pub(crate) fn gaussian_eliminate_r(arr: &mut Box<[T]>, 
-        r: usize, dim: (usize, usize),
+    pub(crate) fn gaussian_eliminate_r(
+        arr: &mut Box<[T]>, 
+        r: usize, r2: usize, dim: (usize, usize),
+        factor: T,
         idx: fn(usize, usize, (usize, usize)) -> usize) 
     {
+        
+        let (_nr, nc) = dim;
+
         // eliminate those rows under rth row
         // to get row echelon form
-
-        let (nr, nc) = dim;
-
-        for r2 in (r+1)..nr {
-
-            let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];
-            arr[idx(r2, r, dim)] = T::default();
-
-            for c2 in (r+1)..nc {
-                arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
-            }
+        
+        arr[idx(r2, r, dim)] = T::default();
+        for c2 in (r+1)..nc {
+            arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
         }
     }
 
@@ -140,12 +141,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         // we find the maxr,
         // swap rth and maxr
         if r != maxr {
-            Array::swap_r(arr, r, maxr, 0, nc, idx, dim);
+            Array::swap_r_ij(arr, r, maxr, 0, nc, idx, dim);
             p.push((r, maxr));
         }
     }
 
-    pub(crate) fn swap_r(arr: &mut Box<[T]>, 
+    // swap ith jth row, in begin..end columns
+    pub(crate) fn swap_r_ij(arr: &mut Box<[T]>, 
                   i: usize, j: usize, 
                   begin_col: usize, 
                   end_col: usize, 
@@ -162,6 +164,35 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
     pub(crate) fn abs(val: T, z: T) -> T {
         if val < z {return z-val};
         val
+    }
+
+    pub fn compute_dist(arr1: &Self, arr2: &Self) -> Result<T, ListError> {
+        match (arr1, arr2) {
+            (Array::Array2D { arr: arr1, nr, nc, put_val_by_row },
+             Array::Array2D { arr: arr2, nr: nr2, nc: nc2, put_val_by_row: put_val_by_row2 })
+            => {
+
+                if (*nr, *nc) != (*nr2, *nc2) {return Err(ListError::MismatchedDim);}
+
+                let idx1: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row {idxr} else {idxc};
+                let idx2: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row2 {idxr} else {idxc};
+                let dim = (*nr, *nc);
+
+                let z = T::default();
+                let mut sum = T::default();
+
+                for r in 0..*nr {
+                    for c in 0..*nc {
+                        sum += Array::abs(arr1[idx1(r, c, dim)] - arr2[idx2(r, c, dim)], z);
+                    }
+                }
+
+                return Ok(sum);
+            },
+
+            _ => return Err(ListError::MismatchedTypes),
+        }
+
     }
 }
 
