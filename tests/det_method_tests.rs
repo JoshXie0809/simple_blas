@@ -42,16 +42,14 @@ pub mod tests {
     #[test]
     fn permutation_array_2d() -> Result<(), ListError> {
         let mut arr = Array::new_array_2d(
-            Box::new([3, 4, 1, 2, 5, 6]), (3, 2), true)?;
+            Box::new([3, 4, 1, 2, -5, -6]), (3, 2), true)?;
         
-        let p: Vec<(usize, usize)> = arr.permute()?;
+        let _p: Vec<(usize, usize)> = arr.permute()?;
 
         assert_eq!(
             arr,
-            Array::new_array_2d(Box::new([5, 6, 3, 4, 1, 2]), (3, 2), true)?
+            Array::new_array_2d(Box::new([-5, -6, 3, 4, 1, 2]), (3, 2), true)?
         );
-
-        println!("{:?}", p);
 
         Ok(())
     }
