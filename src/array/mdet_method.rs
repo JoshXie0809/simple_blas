@@ -15,9 +15,10 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
             Array::Array2D { arr, nr, nc, put_val_by_row} => {
                 if *nr != *nc {return Err(ListError::MatrixDetDimError);}
 
-                let mut arr1 = arr.clone();
-                let mut p = Vec::new();
-                let det = Array::gaussian_det(&mut arr1, &mut p, *nr, *put_val_by_row);
+                let mut arr1: Box<[T]> = arr.clone();
+                let mut pr: Vec<(usize, usize)> = Vec::new();
+                let mut pc: Vec<(usize, usize)> = Vec::new();
+                let det: T = Array::gaussian_det(&mut arr1, &mut pr, &mut pc, *nr, *put_val_by_row);
                 
                 return Ok(det);
             },
@@ -25,16 +26,21 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         }
     }
 
-    pub(crate) fn gaussian_det(arr: &mut Box<[T]>, p: &mut Vec<(usize, usize)>, n: usize, by_row: bool) -> T {
-        
+    pub(crate) fn gaussian_det(
+        arr: &mut Box<[T]>, 
+        pr: &mut Vec<(usize, usize)>, 
+        pc: &mut Vec<(usize, usize)>, 
+        n: usize, by_row: bool
+    ) -> T 
+    {
         // if SQUARE matrix
         // nr = nc = n
         let dim = (n, n);
-        Array::gaussian_eliminate(arr, by_row, dim, p);
+        Array::gaussian_eliminate_rc(arr, by_row, dim, pr, pc);
 
         // compute sign and UPPER TRIANGULAR matrix's determinant
         let mut det = T::from( 1.0_f32 );
-        let num_swp = (p.len() % 2) as i32;
+        let num_swp = (pr.len() % 2) as i32 + (pc.len() % 2) as i32;
         let sign = T::from( (1.0_f32).powi(num_swp) );
 
         for i in 0..n {
@@ -44,7 +50,41 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         sign * det
     }
 
-    pub(crate) fn gaussian_eliminate(arr: &mut Box<[T]>, by_row: bool, dim: (usize, usize), p: &mut Vec<(usize, usize)>) {
+    // extend gaussian_eliminate
+    // by full pivoting
+    pub(crate) fn gaussian_eliminate_rc(
+        arr: &mut Box<[T]>, by_row: bool, dim: (usize, usize), 
+        pr: &mut Vec<(usize, usize)>, pc: &mut Vec<(usize, usize)>
+    ) {
+
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        let z: T = T::default();
+        let (nr, nc) = dim;
+        let n = if nr < nc {nr} else {nc};
+        
+        for r in 0..n {
+            // do permutation if (r, r) is not max
+            // if find other do swap_row(r, maxr)
+            // find max abs(val) under (r, r) element
+            Array::permute_rc(arr, r, dim, z, pr, pc, idx);
+
+            let maxv = arr[idx(r, r, dim)];
+            // check if zero is max value
+            if maxv == z {continue;}
+
+            // eliminate val under (r, r)
+            for r2 in (r+1)..nr {
+                let factor: T = arr[idx(r2, r, dim)] / maxv;
+                Array::gaussian_eliminate_r(arr, r, r2, dim, factor, idx);
+            }
+        }
+    }
+    
+    #[allow(dead_code)]
+    pub(crate) fn gaussian_eliminate(
+        arr: &mut Box<[T]>, by_row: bool, dim: (usize, usize), 
+        p: &mut Vec<(usize, usize)>
+    ) {
 
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
         let z: T = T::default();
@@ -57,9 +97,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
             // find max abs(val) under (r, r) element
             Array::permute_r(arr, r, dim, z, p, idx);
 
+            let maxv = arr[idx(r, r, dim)];
+            // check if zero is max value
+            if maxv == z {continue;}
+
             // eliminate val under (r, r)
             for r2 in (r+1)..nr {
-                let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];                
+                let factor: T = arr[idx(r2, r, dim)] / maxv;
                 Array::gaussian_eliminate_r(arr, r, r2, dim, factor, idx);
             }
         }
@@ -146,7 +190,51 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         }
     }
 
-    // swap ith jth row, in begin..end columns
+
+    pub(crate) fn permute_rc(
+        arr: &mut Box<[T]>, 
+        r:usize, dim: (usize, usize), z: T, 
+        pr: &mut Vec<(usize, usize)>,
+        pc: &mut Vec<(usize, usize)>,
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+    ) {
+        let (nr, nc) = dim;
+        // now is rth row
+        // assume max element on this row
+
+        let mut maxr = r;
+        let mut maxc = r;
+        let mut maxv = Array::abs(arr[idx(r, r, dim)], z);
+
+        // find maxv in (maxr, maxc) under (r, r)
+        for ri in 0..(nr - r) {
+            for ci in 0..(nc - r) {
+                let val1 = Array::abs(arr[idx(r + ri, r + ci, dim)], z);
+                if maxv < val1 {
+                    maxr = r + ri;
+                    maxc = r + ci;
+                    maxv = val1;
+                }
+            }
+        }
+        
+        // we find the maxr not equal r,
+        // swap rth row and maxr row
+        if r != maxr {
+            Array::swap_r_ij(arr, r, maxr, 0, nc, idx, dim);
+            pr.push((r, maxr));
+        }
+
+        // we find the maxc not equal r,
+        // swap rth col and maxc col
+        if r != maxc {
+            Array::swap_c_ij(arr, r, maxc, 0, nr, idx, dim);
+            pc.push((r, maxc));
+        }
+
+    }
+
+    // swap ith, jth row, in begin..end columns
     pub(crate) fn swap_r_ij(arr: &mut Box<[T]>, 
                   i: usize, j: usize, 
                   begin_col: usize, 
@@ -154,10 +242,27 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                   idx: fn(usize, usize, (usize, usize)) -> usize,
                   dim: (usize, usize)) 
     {
-            
-            for c in begin_col..end_col {
-                (arr[idx(i, c, dim)], arr[idx(j, c, dim)]) = 
-                (arr[idx(j, c, dim)], arr[idx(i, c, dim)]);
+        for c in begin_col..end_col {
+            // let idx1: usize = idx(i, c, dim);
+            // let idx2: usize = idx(j, c, dim);
+            // arr.swap(idx1, idx2);
+            arr.swap(idx(i, c, dim), idx(j, c, dim));
+        }
+    }
+
+    // swap ith, jth row, in begin..end columns
+    pub(crate) fn swap_c_ij(arr: &mut Box<[T]>, 
+        i: usize, j: usize, 
+        begin_row: usize, 
+        end_row: usize, 
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        dim: (usize, usize)) 
+    {
+        for r in begin_row..end_row {
+            // let idx1: usize = idx(i, c, dim);
+            // let idx2: usize = idx(j, c, dim);
+            // arr.swap(idx1, idx2);
+            arr.swap(idx(r, i, dim), idx(r, j, dim));
         }
     }
 

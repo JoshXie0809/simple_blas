@@ -29,13 +29,15 @@ pub mod tests {
         // only SQUARE matrix can calc det
 
         let arr1: Array<f32> = Array::new_array_2d(
-            Box::new([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]), (2,3), true
+            Box::new([0.0, 1.0, 0.0, 3.0]), (2, 2), true
         )?;
 
-        if let Err(error) = arr1.mdet() {
-            assert_eq!(error, ListError::MatrixDetDimError)
-        };
- 
+        let det: f32 = arr1.mdet()?;
+        // true is zero
+        let tol = 1e-10;
+    
+        assert!( det.abs() < tol);
+  
         Ok(())
     }
 

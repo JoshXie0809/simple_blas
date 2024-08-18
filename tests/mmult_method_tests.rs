@@ -29,7 +29,7 @@ pub mod tests {
 
         let mut arr1 = 
             Array::new_array_2d(
-                Box::new([1, 2, 3, 4]), (2, 2), true)?;
+                Box::new([1, 2, 3, 4, 5, 6, 7, 8]), (4, 2), true)?;
 
         let arr2 = 
             Array::new_array_2d(
@@ -38,11 +38,11 @@ pub mod tests {
         arr1.mmult(&arr2)?;
         
         assert_eq!(arr1, 
-            Array::new_array_2d(Box::new([5, 11, 11, 25, 17, 39]), (2, 3), false)?
+            Array::new_array_2d(Box::new([5, 11, 17, 23, 11, 25, 39, 53, 17, 39, 61, 83]), (4, 3), false)?
         );
 
         assert_ne!(arr1, 
-            Array::new_array_2d(Box::new([5, 11, 11, 25, 117, 319]), (2, 3), false)?
+            Array::new_array_2d(Box::new([5, 11, 17, 23, 11, 25, 349, 53, 17, 39, 61, 83]), (4, 3), false)?
         );
 
         Ok(())

@@ -141,10 +141,15 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
             // P*A = U1
             Array::permute_r(arr, r, dim, z, p, idx);
 
+            // check if max val is zero
+            // do not need to do row eliminations
+            let maxv: T = arr[idx(r, r, dim)];
+            if maxv == z {continue;}
+
             // do row elimination
             for r2 in (r+1)..nr {
                 // Li P*A = U2
-                let factor: T = arr[idx(r2, r, dim)] / arr[idx(r, r, dim)];
+                let factor: T = arr[idx(r2, r, dim)] / maxv;
                 Array::gaussian_eliminate_r(arr, r, r2, dim, factor, idx);
 
                 // L*Li (P*A) = L (P A)
