@@ -48,7 +48,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
 
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
         let z: T = T::default();
-
         let (nr, nc) = dim;
         let n = if nr < nc {nr} else {nc};
         
@@ -77,7 +76,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
 
         // eliminate those rows under rth row
         // to get row echelon form
-        
+
         arr[idx(r2, r, dim)] = T::default();
         for c2 in (r+1)..nc {
             arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
@@ -126,6 +125,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         let (nr, nc) = dim;
         // now is rth row
         // assume max element on this row
+
         let mut maxr = r;
         let mut maxv = Array::abs(arr[idx(r, r, dim)], z);
 
