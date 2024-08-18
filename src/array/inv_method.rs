@@ -41,12 +41,10 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                 // and A is invertible
                 // to solve Y, we solve every column of y
 
-
                 let y: Vec<T> = vec![T::default(); (*nr) * (*nc)];
                 let mut y: Box<[T]> = y.into_boxed_slice();
 
                 for c in 0..(*nc) {
-
                     // ei: ith column on Identity matrix
                     let mut ei = vec![T::default(); *nr];
                     ei[c] = T::from(1.0_f32);
@@ -65,41 +63,21 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                     let end: usize = start + *nr;
                     let yc = &mut y[start..end];
                     Array::l_tri_solve(&lu, &ei, yc, dim, idx, is_lu);
-
-
-                    // for i in 0..(*nr) {
-                    //     let mut sum = T::default();
-                    //     for bi in 0..i {
-                    //         sum += lu[idx(i, bi, dim)] * y[idx(bi, c, dim)]
-                    //     }
-                    //     // yi[i]
-                    //     // l[i, i] = 1
-                    //     y[idx(i, c, dim)] = ei[i] - sum;
-                    // }
                 }
                 
                 for c in 0..(*nc) {
-
                     let start: usize = c * (*nr);
                     let end: usize = start + *nr;
-
                     let yc = &y[start..end];
                     let mut xc = vec![T::default(); *nr];
 
                     // solve Uxc = yc
                     Array::u_tri_solve(&lu, yc, xc.as_mut_slice(), dim, idx);
-
+                    
+                    // write result
                     for (i, xc_i) in xc.into_iter().enumerate() {
                         arr[idx(i, c, dim)] = xc_i;
                     }
-
-                    // for m in (0..*nr).rev() {
-                    //     let mut sum: T = T::default();
-                    //     for fi in (m+1)..(*nc) {
-                    //         sum += lu[idx(m, fi, dim)] * arr[idx(fi, c, dim)];
-                    //     }        
-                    //     arr[idx(m, c, dim)] = (y[idx(m, c, dim)] - sum) / lu[idx(m, m, dim)];
-                    // }
                 }
             },
 
