@@ -42,7 +42,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 // replace by_row
                 let old_by_row = mem::replace(by_row1, true);
 
-                Array::matrix_mut(arr1, arr2, old_arr, new_dim, ni, old_by_row, *by_row2);
+                Array::matrix_mult(arr1, arr2, old_arr, new_dim, ni, old_by_row, *by_row2);
 
             },
             
@@ -52,7 +52,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
-    fn matrix_mut(
+    fn matrix_mult(
         arr1: &mut Box<[T]>, arr2: &Box<[T]>, old_arr: Box<[T]>, 
         new_dim: (usize, usize), 
         ni: usize, 
@@ -92,29 +92,22 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     return Err(ListError::MatrixMultMismatchedDim);
                 }
 
-                // dim give to self.dim (nr1, nc2)
                 let new_dim: (usize, usize) = (*nr1, *nc2);
-                
-                // each old self row vector has ni elements
                 let ni = *nc1;
-
-                // box give to self.arr
                 let new_vec: Vec<T> = vec![T::default(); new_dim.0 * new_dim.1];
                 let new_box: Box<[T]> = new_vec.into_boxed_slice();
-
+ 
                 // replace arr
-                let old_arr: Box<[T]> = mem::replace(arr1, new_box);
-                
+                let old_arr: Box<[T]> = mem::replace(arr1, new_box);                
                 // replace nr, nc
                 let _ = (
                     mem::replace(nr1, new_dim.0), 
                     mem::replace(nc1, new_dim.1)
                 );
-                
                 // replace by_row
                 let old_by_row = mem::replace(by_row1, true);
 
-                Array::matrix_mut_speed(arr1, arr2, old_arr, new_dim, ni, old_by_row, *by_row2);
+                Array::matrix_mult_speed(arr1, arr2, old_arr, new_dim, ni, old_by_row, *by_row2);
 
             },
             
@@ -124,7 +117,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
-    fn matrix_mut_speed(
+    fn matrix_mult_speed(
         arr1: &mut Box<[T]>, arr2: &Box<[T]>, old_arr: Box<[T]>, 
         new_dim: (usize, usize), 
         ni: usize, 
@@ -134,7 +127,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             .num_threads(6)
             .build()
             .unwrap();
-
 
         let index_old: fn(usize, usize, (usize, usize)) -> usize =  if old_by_row { idxr } else { idxc };
         let index_other: fn(usize, usize, (usize, usize)) -> usize = if by_row2 { idxr } else { idxc };
@@ -150,7 +142,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                         * 
                         arr2[index_other(i, c, (ni, new_dim.1))];
                     }
-    
+
                     row[c] = sum;
                 }
             })
