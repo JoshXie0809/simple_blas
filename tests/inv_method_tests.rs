@@ -35,28 +35,26 @@ pub mod tests {
     fn inv_arr_2d_2() -> Result<(), ListError>{
         let mut arr = Array::new_array_2d(
             Box::new([
-                1.0, 22.0, 5.0,
-                3.0, 4.0, 11.0,
-                12.0, 14.0, 19.0]
-        ), 
+                1.11, 22.18, 5.78,
+                3.34, 4.83, 11.49,
+                -1.23, 14.07, 19.37
+        ]), 
             (3, 3), 
-            true
+            false
         )?;
 
         let arr2 = Array::new_array_2d(
             Box::new([
-                1.0, 22.0, 5.0,
-                3.0, 4.0, 11.0,
-                12.0, 14.0, 19.0
+                1.11, 22.18, 5.78,
+                3.34, 4.83, 11.49,
+                -1.23, 14.07, 19.37
             ]), 
             (3, 3), 
-            true
+            false
         )?;
 
         arr.inv()?;
         arr.mmult(&arr2)?;
-
-        println!("{:?}", arr);
 
         let real_inv = Array::new_array_2d(
             Box::new([
@@ -69,7 +67,6 @@ pub mod tests {
         )?;
 
         let tol: f64 = 1e-10;
-
         let diff: f64 = Array::compute_dist(&arr, &real_inv)?;
 
         assert!(diff < tol);
