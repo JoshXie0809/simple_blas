@@ -68,4 +68,26 @@ pub mod tests {
 
         Ok(())
     }
+
+    // speed up version of mat_mult
+    #[test]
+    fn mmult_speed_up_method_2d_array_1() -> Result<(), ListError> {
+        
+        let arr1 = 
+            Array::new_array_2d(
+                Box::new([1, 0, 0, 1]), (2, 2), true)?;
+
+        let mut arr2 = 
+            Array::new_array_2d(
+                Box::new([1, 2, 3, 4]), (2, 2), true)?;
+        
+        arr2.mmult_speed(&arr1)?;
+
+        assert_eq!(arr2, Array::new_array_2d(
+            Box::new([1, 2, 3, 4]), (2, 2), true)?
+        );
+
+        Ok(())
+
+    }
 }
