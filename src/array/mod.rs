@@ -24,7 +24,7 @@ pub enum ListError {
     MatrixMultMismatchedDim,
     MatrixDetDimError,
     MatrixInvDimError,
-    SigularMat,
+    SingularMat,
 }
 
 /// index for put value by row

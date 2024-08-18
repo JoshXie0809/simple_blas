@@ -34,7 +34,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                 // all diag on U is not zero
 
                 for i in 0..(*nr) {
-                    if ul[idx(i, i, dim)] == T::default() {return Err(ListError::SigularMat);}
+                    if ul[idx(i, i, dim)] == T::default() {return Err(ListError::SingularMat);}
                 }
 
                 // now we have p, l, u

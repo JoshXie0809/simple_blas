@@ -54,9 +54,10 @@ pub mod tests {
 
         let det: f64 = arr1.mdet()?;
         let true_val: f64 = 31.0 * 45.0 * (-9.0);
-        let tol: f64 = 1e-10;
+        let tol: f64 = 1e-15;
 
         assert!( (det - true_val).abs() < tol );
+        println!("{}", (det - true_val).abs());
  
         Ok(())
     }
