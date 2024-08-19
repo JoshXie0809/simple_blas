@@ -29,6 +29,7 @@ pub enum ListError {
     MatrixDetDimError,
     MatrixInvDimError,
     SingularMat,
+    NotSquareMat,
 }
 
 /// index for put value by row

@@ -48,7 +48,6 @@ pub mod tests {
         Ok(())
     }
 
-
     #[test]
     fn mmult_method_2d_array_3() -> Result<(), ListError> {
 
@@ -65,7 +64,6 @@ pub mod tests {
             assert_eq!(err, ListError::MatrixMultMismatchedDim);
         };
         
-
         Ok(())
     }
 
@@ -88,6 +86,5 @@ pub mod tests {
         );
 
         Ok(())
-
     }
 }

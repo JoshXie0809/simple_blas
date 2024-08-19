@@ -1,7 +1,7 @@
 // matrix mult
 
 use std::mem;
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 
 use super::{idxc, idxr, Array};
 use super::ListError;
@@ -10,7 +10,7 @@ use rayon::{prelude::*, ThreadPoolBuilder};
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
-+ Default 
++ Default + Sub<Output=T> + PartialOrd
 {
     pub fn mmult(&mut self, other: &Self) -> Result<(), ListError> {
         match (self, other) {
@@ -31,7 +31,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 let new_box: Box<[T]> = new_vec.into_boxed_slice();
 
                 // replace arr
-                let old_arr: Box<[T]> = mem::replace(arr1, new_box);
+                let m1: Box<[T]> = mem::replace(arr1, new_box);
                 
                 // replace nr, nc
                 let _ = (
@@ -40,9 +40,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 );
                 
                 // replace by_row
-                let old_by_row = mem::replace(by_row1, true);
+                let by_row_m1 = mem::replace(by_row1, true);
 
-                Array::matrix_mult(arr1, arr2, old_arr, new_dim, ni, old_by_row, *by_row2);
+                Array::mat_m1_mat_mult_mat_m2(arr1, &m1, &arr2, new_dim, ni, by_row_m1, *by_row2);
 
             },
             
@@ -52,30 +52,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
-    fn matrix_mult(
-        arr1: &mut Box<[T]>, arr2: &Box<[T]>, old_arr: Box<[T]>, 
-        new_dim: (usize, usize), 
-        ni: usize, 
-        old_by_row: bool, by_row2: bool) 
-    {
-        let index_old: fn(usize, usize, (usize, usize)) -> usize =  if old_by_row { idxr } else { idxc };
-        let index_other: fn(usize, usize, (usize, usize)) -> usize = if by_row2 { idxr } else { idxc };
-
-        for r in 0..new_dim.0 {
-            for c in 0..new_dim.1 {
-                let mut sum = T::default();
-                for i in 0..ni {
-                    sum += 
-                    
-                    old_arr[index_old(r, i, (new_dim.0, ni))] 
-                    * 
-                    arr2[index_other(i, c, (ni, new_dim.1))];
-                    
-                }
-                arr1[idxr(r, c, new_dim)] = sum;
-            }
-        }
-    }
 }
 
 

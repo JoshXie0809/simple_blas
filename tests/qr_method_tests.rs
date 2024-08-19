@@ -40,16 +40,20 @@ pub mod test {
                 -4.05, 5.01, 6.97
             ]), 
             (2, 3), 
-            true
+            false
         )?;
 
+        println!("{:?}", arr);
+
         let (mut q, r) = arr.mqr()?;
+
+        println!("q: {:?}", q);
+        println!("r: {:?}", r);
 
         q.mmult(&r)?;
 
         let dist = Array::compute_dist(&arr, &q)?;
-        println!("{:?}", q);
-
+        println!("q: {:?}", q);
         assert!(dist < 1e-10);
         
         Ok(())
@@ -68,6 +72,8 @@ pub mod test {
         )?;
 
         let (mut q, r) = arr.mqr()?;
+        println!("q: {:?}", q);
+        println!("r: {:?}", r);
 
         q.mmult(&r)?;
 

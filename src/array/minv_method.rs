@@ -63,7 +63,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                     let start: usize = c * (*nr);
                     let end: usize = start + *nr;
                     let yc = &mut y[start..end];
-                    Array::l_tri_solve(&lu, &ei, yc, dim, idx, is_lu);
+                    Array::l_tri_solve(&lu, &ei, yc, dim, idx, is_lu)?;
                 }
                 
                 for c in 0..(*nc) {
@@ -73,7 +73,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                     let mut xc = vec![T::default(); *nr];
 
                     // solve Uxc = yc
-                    Array::u_tri_solve(&lu, yc, xc.as_mut_slice(), dim, idx);
+                    Array::u_tri_solve(&lu, yc, xc.as_mut_slice(), dim, idx)?;
                     
                     // write result
                     for (i, xc_i) in xc.into_iter().enumerate() {
@@ -152,7 +152,7 @@ pub mod tests {
         let mut b: Vec<f64> = vec![1.0, -1.0];
         let mut x: Vec<f64> = vec![0.0, 0.0];
 
-        Array::p_lu_solve(&lu, &p, &mut b, x.as_mut_slice(), dim, idx);
+        let _ = Array::p_lu_solve(&lu, &p, &mut b, x.as_mut_slice(), dim, idx);
 
         let mut dist: f64 = 0.0;
         let true_vec: Vec<f64> = vec![1.0, -1.0];
@@ -165,6 +165,48 @@ pub mod tests {
 
         // check b is not change
        assert_eq!(b, vec![1.0, -1.0]);
+
+    }
+
+    #[test]
+    fn qr_solve_tes() {
+
+        let arr: Vec<f64> = vec![
+            19.3, 10.07,
+            53.2, 43.1,
+        ];
+
+        let arr1 = arr.clone();
+        let arr2 = arr.clone();
+
+        let mut arr1: Box<[f64]> = arr1.into_boxed_slice();
+        let mut p: Vec<(usize, usize)> = vec![];
+        let dim: (usize, usize) = (2, 2);
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
+
+        Array::p_lu(&mut p, &mut arr1, dim, idx);
+
+        let (qm, rm) = Array::qr(&arr2, dim, true);
+        
+        
+        // now arr store lu
+        let lu: Box<[f64]> = arr1;
+        let mut b: Vec<f64> = vec![1.089, -1.078];
+
+
+        let mut x1: Vec<f64> = vec![0.0, 0.0];
+        let mut x2: Vec<f64> = vec![0.0, 0.0];
+
+        let _ = Array::p_lu_solve(&lu, &p, &mut b, x1.as_mut_slice(), dim, idx);
+
+        let dimq: (usize, usize) = (2, 2);
+        let dimr: (usize, usize) = (2, 2);
+        let _ = Array::qr_solve(&mut x2, &qm, &rm, &b, dimq, dimr, true, true);
+
+        if let Ok(d) = Array::dist_n1_vec_v1_v2(&x1, &x2) {
+            assert!(d < 1e-10);
+            println!("norm 1 dist: {:e}", d);
+        }
 
     }
 }

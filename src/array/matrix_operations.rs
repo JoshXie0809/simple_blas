@@ -236,7 +236,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
-
     pub(crate) fn self_add_mat_m (
         arr: &mut [T], other: &[T],
         dim1: (usize, usize), dim2: (usize, usize),
@@ -316,6 +315,36 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     }
 
     // matrix mult
+    
+    pub(crate) fn mat_m1_mat_mult_mat_m2(
+        res: &mut [T], 
+        m1: &[T], m2: &[T], 
+        new_dim: (usize, usize), 
+        ni: usize, 
+        by_row_m1: bool, by_row_m2: bool) 
+    {
+        let index1: fn(usize, usize, (usize, usize)) -> usize = if by_row_m1 { idxr } else { idxc };
+        let index2: fn(usize, usize, (usize, usize)) -> usize = if by_row_m2 { idxr } else { idxc };
+
+        for r in 0..new_dim.0 {
+            for c in 0..new_dim.1 {
+                let mut sum = T::default();
+                for i in 0..ni {
+                    sum += 
+                    
+                    m1[index1(r, i, (new_dim.0, ni))] 
+                    * 
+                    m2[index2(i, c, (ni, new_dim.1))];
+                    
+                }
+
+                res[idxr(r, c, new_dim)] = sum;
+            }
+        }
+    }
+
+    
+    
     pub(crate) fn mat_a_dot_vec_b(
         am: &[T], b: &[T], res: &mut [T],
         dim: (usize, usize), 
@@ -334,6 +363,21 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             res[r] = sum;
         }
     }
+
+    pub(crate) fn dist_n1_vec_v1_v2(
+        v1: &[T], v2: &[T]
+    ) -> Result<T, ListError> {
+        let z = T::default();
+        let mut sum = z ;
+        let length = v1.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+        for i in 0..length {
+            sum += Array::abs(v1[i] - v2[i], z)
+        }
+        
+        Ok(sum)
+    }
+
 }
 
 
@@ -352,7 +396,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     pub(crate) fn p_lu_solve(
         lu: &[T], p: &[(usize, usize)], b: &mut [T], x: &mut [T],
         dim: (usize, usize), idx: fn(usize, usize, (usize, usize)) -> usize
-    ) {
+    ) -> Result<(), ListError>
+    {
         // L Ux = pb
         // let Ux = y
         // L y = pv
@@ -370,18 +415,20 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let mut y: Vec<T> = vec![T::default(); nr];
 
         // solve y
-        Array::l_tri_solve(lu, b, &mut y, dim, idx, is_lu);
+        Array::l_tri_solve(lu, b, &mut y, dim, idx, is_lu)?;
 
         // after we solve y
         // solve Ux = y
         // similarly x is easy to solve
 
-        Array::u_tri_solve(lu, &y, x, dim, idx);
+        Array::u_tri_solve(lu, &y, x, dim, idx)?;
         
         // turn pb to b
         for &(i, j) in p.iter().rev() {
             b.swap(i, j);
         }
+
+        Ok(())
     }
 
     // solve Lx = b
@@ -391,7 +438,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         dim: (usize, usize), 
         idx: fn(usize, usize, (usize, usize)) -> usize,
         is_lu: bool
-    ) {
+    ) -> Result<(), ListError>
+    {
         
         // i = 0
         // l[0, 0] * yi[0] = b[0]
@@ -406,7 +454,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         // l[2, 0] * yi[0] + l[2, 1] * yi[1] + l[2, 2] * yi[2] = b[2]
         // yi[2] = (b[2] - l[2, 0] * yi[0] - l[2, 1] * yi[2]) / l[2, 2]
 
-        let (nr, _nc) = dim;
+        let (nr, nc) = dim;
+        if nr != nc {return Err(ListError::NotSquareMat);}
 
         // foreach row
         for r in 0..nr {                        
@@ -422,6 +471,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 x[r] = b[r] - sum / l[idx(r, r, dim)];
             }
         }
+
+        Ok(())
         
     }
 
@@ -431,7 +482,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         x: &mut [T],
         dim: (usize, usize), 
         idx: fn(usize, usize, (usize, usize)) -> usize,
-    ) {
+    ) -> Result<(), ListError>
+    {
         // similarly, we solve X by column
 
         // m = n-1
@@ -443,6 +495,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         // x[m-1] = (yi[m-1] - u[m-1, m] * x[m]) / u[m-1, m-1]
         
         let (nr, nc) = dim;
+        if nr != nc {return Err(ListError::NotSquareMat);}
         for r in (0..nr).rev() {
             // forward solve
             let mut sum = T::default();
@@ -451,6 +504,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             }
             x[r] = (b[r] - sum) / u[idx(r, r, dim)];
         }
+
+        Ok(())
     }
 
     // plu is not only for SQUARE
@@ -499,7 +554,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     ) ->  (Vec<T>, Vec<T>)
     {
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-
+        
         let (nr, nc) = dim;
         // rank
         let n = if nr < nc {nr} else {nc};
@@ -602,6 +657,33 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let by_row = !by_row;
 
         Array::mat_a_dot_vec_b(qm, b, res, dimqt, by_row);
+    }
+
+    // solve QR x = b
+    // Q'Q Rx = Q'b
+    // Rx = Q'b
+    pub(crate) fn qr_solve (
+        res: &mut [T],
+        qm: &[T], rm: &[T], 
+        b: &[T],
+        dimq: (usize, usize),
+        dimr: (usize, usize),
+        by_row_q: bool,
+        by_row_r: bool
+    ) -> Result<(), ListError>
+    {
+        // first let y = Rx
+        // solve Q y = b
+        let (nr_q, nc_q) = dimq;
+        if nr_q != nc_q {return Err(ListError::NotSquareMat);}
+        let mut y = vec![T::default(); dimr.1];
+        Array::q_solve(qm, b, &mut y, dimq, by_row_q);
+
+        //  solve Rx = y
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row_r {idxr} else {idxc};
+        Array::u_tri_solve(rm, &y, res, dimr, idx)?;
+
+        Ok(())
     }
 }
 
