@@ -22,9 +22,9 @@ Div<Output=T> + Sub<Output=T>
                 // m is n x m, u-tri matrix
                 let dim: (usize, usize) = (*nr, *nc);
                 let (nr, nc) = dim;
-                let dimq: (isize, isize) = (nr as isize, nr as isize);
-                let dimr: (isize, isize) = (nr as isize, nc as isize);
-                
+                let n = if nr < nc {nr} else {nc};
+                let dimq: (isize, isize) = (nr as isize, n as isize);
+                let dimr: (isize, isize) = (n as isize, nc as isize);
                      
                 let (q, r) = Array::qr_dcmp(&arr, dim, *put_val_by_row);
                 
@@ -147,7 +147,7 @@ Div<Output=T> + Sub<Output=T>
 
     // Qx = b
     // Q is orthonogal and unit vector
-    // x = Qt'b
+    // x = Q'b
     pub(crate) fn q_solve(
         qm: &[T], b: &[T], res: &mut [T],
         dimq: (usize, usize),
