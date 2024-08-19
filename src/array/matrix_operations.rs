@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 use std::usize;
-use super::{idxr, idxc};
+use super::{idxc, idxr, ListError};
 
 use super::Array;
 
@@ -151,12 +151,26 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
     // matrix add 
 
-    pub(crate) fn vec_a_add_scalar_s (
+    pub(crate) fn self_add_scalar_s (
         arr: &mut [T], s: T
     ) {
         for i in 0..arr.len() {
             arr[i] += s;
         }
+    }
+
+    pub(crate) fn self_add_vec_v2 (
+        arr: &mut [T], v2: &[T]
+    ) -> Result<(), ListError>
+    {
+        let length = arr.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+
+        for i in 0..length {
+            arr[i] += v2[i]
+        }
+
+        Ok(())
     }
 
     // matrix mult
