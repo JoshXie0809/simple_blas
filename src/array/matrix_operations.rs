@@ -126,8 +126,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         arr: &mut [T], factor: T, i: usize, j: usize,
         dim: (usize, usize), 
         idx: fn(usize, usize, (usize, usize)) -> usize,
-        start_col: usize, end_col: usize
-    ) {
+        start_col: usize, end_col: usize) 
+    {
         for k in start_col..end_col {
             arr[idx(i, k, dim)] -= factor * arr[idx(j, k, dim)];
         }
@@ -173,6 +173,20 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
+    pub(crate) fn self_minus_vec_v2 (
+        arr: &mut [T], v2: &[T]
+    ) -> Result<(), ListError>
+    {
+        let length = arr.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+
+        for i in 0..length {
+            arr[i] -= v2[i]
+        }
+
+        Ok(())
+    }
+
     pub(crate) fn self_add_mat_m (
         arr: &mut [T], other: &[T],
         dim1: (usize, usize), dim2: (usize, usize),
@@ -186,6 +200,25 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for r in 0..nr {
             for c in 0..nc {
                 arr[idx1(r, c, dim1)] += other[idx2(r, c, dim2)];
+            }
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn self_minus_mat_m (
+        arr: &mut [T], other: &[T],
+        dim1: (usize, usize), dim2: (usize, usize),
+        idx1: fn(usize, usize, (usize, usize)) -> usize,
+        idx2: fn(usize, usize, (usize, usize)) -> usize
+    ) -> Result<(), ListError>
+    {
+        if dim1 != dim2 {return Err(ListError::MismatchedDim);}
+        let (nr, nc) = dim1;
+
+        for r in 0..nr {
+            for c in 0..nc {
+                arr[idx1(r, c, dim1)] -= other[idx2(r, c, dim2)];
             }
         }
 
