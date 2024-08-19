@@ -17,6 +17,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         val
     }
 
+    // matrix row permutation
+
     pub(crate) fn permute_r(
         arr: &mut Box<[T]>, 
         r:usize, dim: (usize, usize), z: T, 
@@ -144,6 +146,16 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             // let idx2: usize = idx(j, c, dim);
             // arr.swap(idx1, idx2);
             arr.swap(idx(r, i, dim), idx(r, j, dim));
+        }
+    }
+
+    // matrix add 
+
+    pub(crate) fn vec_a_add_scalar_s (
+        arr: &mut [T], s: T
+    ) {
+        for i in 0..arr.len() {
+            arr[i] += s;
         }
     }
 
