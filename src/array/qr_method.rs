@@ -10,7 +10,7 @@ Div<Output=T> + Sub<Output=T>
 + Default
 {
     
-    pub fn qr(&self) -> Result<(Array<T>, Array<T>), ListError> {
+    pub fn mqr(&self) -> Result<(Array<T>, Array<T>), ListError> {
         
         let (q, r) = 
         match self {
@@ -26,7 +26,7 @@ Div<Output=T> + Sub<Output=T>
                 let dimq: (isize, isize) = (nr as isize, n as isize);
                 let dimr: (isize, isize) = (n as isize, nc as isize);
                      
-                let (q, r) = Array::qr_dcmp(&arr, dim, *put_val_by_row);
+                let (q, r) = Array::qr(&arr, dim, *put_val_by_row);
                 
                 let q: Array<T> = Array::new_array_2d(
                     q.into_boxed_slice(),
@@ -49,7 +49,7 @@ Div<Output=T> + Sub<Output=T>
         Ok((q, r))
     }
 
-    pub(crate) fn qr_dcmp(
+    pub(crate) fn qr(
         arr: &[T],
         dim: (usize, usize),
         by_row: bool,
@@ -178,7 +178,6 @@ Div<Output=T> + Sub<Output=T>
         let by_row = !by_row;
 
         Array::mat_a_dot_vec_b(qm, b, res, dimqt, by_row);
-
     }
 
     pub(crate) fn mat_a_dot_vec_b(
@@ -202,23 +201,6 @@ Div<Output=T> + Sub<Output=T>
     }
 
 }
-
-
-#[cfg(test)]
-pub mod tests {
-    use crate::array::Array;
-
-    #[test]
-    fn qr_dcmp_arr_2d() {
-        let arr: Box<[f64]> = vec![1.0, 0.0, 3.0, 4.0].into_boxed_slice();
-        let dim: (usize, usize) = (2, 2);
-        let (q, r) = Array::qr_dcmp(&arr, dim, false);
-        
-        println!("{:?}", q);
-        println!("{:?}", r);
-    }
-}
-
 
 pub trait Sqrt {
     fn sqrt(self) -> Self;

@@ -6,7 +6,7 @@ pub mod test {
     #[test]
     fn qr_arr_2d_1() {
         let arr = Array::Scalar(1.0);
-        if let Err(error) = arr.qr() {
+        if let Err(error) = arr.mqr() {
             assert_eq!(error, ListError::MismatchedTypes);
         };
     }
@@ -22,7 +22,7 @@ pub mod test {
             true
         )?;
 
-        let (mut q, r) = arr.qr()?;
+        let (mut q, r) = arr.mqr()?;
 
         q.mmult(&r)?;
 
@@ -43,7 +43,7 @@ pub mod test {
             true
         )?;
 
-        let (mut q, r) = arr.qr()?;
+        let (mut q, r) = arr.mqr()?;
 
         q.mmult(&r)?;
 
@@ -67,7 +67,7 @@ pub mod test {
             true
         )?;
 
-        let (mut q, r) = arr.qr()?;
+        let (mut q, r) = arr.mqr()?;
 
         q.mmult(&r)?;
 
