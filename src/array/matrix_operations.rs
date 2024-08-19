@@ -173,6 +173,25 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(())
     }
 
+    pub(crate) fn self_add_mat_m (
+        arr: &mut [T], other: &[T],
+        dim1: (usize, usize), dim2: (usize, usize),
+        idx1: fn(usize, usize, (usize, usize)) -> usize,
+        idx2: fn(usize, usize, (usize, usize)) -> usize
+    ) -> Result<(), ListError>
+    {
+        if dim1 != dim2 {return Err(ListError::MismatchedDim);}
+        let (nr, nc) = dim1;
+
+        for r in 0..nr {
+            for c in 0..nc {
+                arr[idx1(r, c, dim1)] += other[idx2(r, c, dim2)];
+            }
+        }
+
+        Ok(())
+    }
+
     // matrix mult
     pub(crate) fn mat_a_dot_vec_b(
         am: &[T], b: &[T], res: &mut [T],
