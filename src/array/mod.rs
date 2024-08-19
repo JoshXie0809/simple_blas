@@ -11,8 +11,10 @@ mod convert_method;
 mod mmult_method;
 mod mdet_method;
 mod inv_method;
+mod qr_method;
 
 mod index_trait;
+
 
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]

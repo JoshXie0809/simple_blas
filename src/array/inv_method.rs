@@ -162,6 +162,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
                 x[r] = b[r] - sum / l[idx(r, r, dim)];
             }
         }
+        
     }
 
     // solve Ux = b
