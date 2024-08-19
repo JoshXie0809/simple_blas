@@ -1,5 +1,6 @@
 // matrix inverse
 
+use super::matrix_operations::Sqrt;
 use super::Array;
 use super::ListError;
 use std::mem;
@@ -11,9 +12,9 @@ use crate::array::{idxr, idxc};
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
-+ Default + From<f32> + PartialOrd
++ Default + From<f32> + PartialOrd + Sqrt
 {
-    pub fn inv(&mut self) -> Result<(), ListError> {
+    pub fn minv(&mut self) -> Result<(), ListError> {
         match self {
             Array::Array2D { arr, nr, nc, put_val_by_row } 
             => {
@@ -86,152 +87,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         Ok(())
     }
 
-    // LU x = pb
-    // give L, U, p, and b to solve x
-    #[allow(dead_code)]
-    pub(crate) fn p_lu_solve(
-        lu: &[T], p: &[(usize, usize)], b: &mut [T], x: &mut [T],
-        dim: (usize, usize), idx: fn(usize, usize, (usize, usize)) -> usize
-    ) {
-        // L Ux = pb
-        // let Ux = y
-        // L y = pv
-        // y = L^-1 pv 
-        // L is lower triangular matrix: easy to solve
-
-
-        // get pb
-        for &(i, j) in p.iter() {
-            b.swap(i, j);
-        }
-        
-        let is_lu: bool =  true;
-        let (nr, _nc) = dim;
-        let mut y: Vec<T> = vec![T::default(); nr];
-
-        // solve y
-        Array::l_tri_solve(lu, b, &mut y, dim, idx, is_lu);
-
-        // after we solve y
-        // solve Ux = y
-        // similarly x is easy to solve
-
-        Array::u_tri_solve(lu, &y, x, dim, idx);
-        
-        // turn pb to b
-        for &(i, j) in p.iter().rev() {
-            b.swap(i, j);
-        }
-    }
-
-    // solve Lx = b
-    pub(crate) fn l_tri_solve(
-        l: &[T], b: &[T],
-        x: &mut [T],
-        dim: (usize, usize), 
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-        is_lu: bool
-    ) {
-        
-        // i = 0
-        // l[0, 0] * yi[0] = b[0]
-        // yi[0] = b[0] / l[0, 0] = b[0]
-        
-        // i = 1
-        // l[1, 1] * yi[1] + l[0, 1] * yi[0] = b[1]
-        // l[1, 1] * yi[1] = b[1] - l[0, 1] * yi[0]
-        // yi[1] = (b[1] - l[0, 1] * yi[0]) / l[1, 1]
-
-        // i = 2
-        // l[2, 0] * yi[0] + l[2, 1] * yi[1] + l[2, 2] * yi[2] = b[2]
-        // yi[2] = (b[2] - l[2, 0] * yi[0] - l[2, 1] * yi[2]) / l[2, 2]
-
-        let (nr, _nc) = dim;
-
-        // foreach row
-        for r in 0..nr {                        
-            let mut sum = T::default();
-            // backward solve
-            for bi in 0..r {
-                sum += l[idx(r, bi, dim)] * x[bi];
-            }
-
-            if is_lu {
-                x[r] = b[r] - sum;
-            } else {
-                x[r] = b[r] - sum / l[idx(r, r, dim)];
-            }
-        }
-        
-    }
-
-    // solve Ux = b
-    pub(crate) fn u_tri_solve(
-        u: &[T], b: &[T],
-        x: &mut [T],
-        dim: (usize, usize), 
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-    ) {
-        // similarly, we solve X by column
-
-        // m = n-1
-        // u[m, m] * x[m] = yi[m]
-        // x[m] = yi[m] / u[m, m]
-
-        // m - 1
-        // u[m-1, m-1] * x[m-1] + u[m-1, m] * x[m] = yi[m-1]
-        // x[m-1] = (yi[m-1] - u[m-1, m] * x[m]) / u[m-1, m-1]
-        
-        let (nr, nc) = dim;
-        for r in (0..nr).rev() {
-            // forward solve
-            let mut sum = T::default();
-            for fi in (r+1)..nc {
-                sum += u[idx(r, fi, dim)] * x[fi];
-            }
-            x[r] = (b[r] - sum) / u[idx(r, r, dim)];
-        }
-    }
-
-    // plu is not only for SQUARE
-    pub(crate) fn p_lu(
-        p: &mut Vec<(usize, usize)>, 
-        arr: &mut Box<[T]>,
-        dim: (usize, usize),
-        idx: fn(usize, usize, (usize, usize)) -> usize
-    ) {
-        // do procedures like Gaussian eliminate
-        // SQUARE MATRIX
-        let (nr, nc) = dim;
-        // zero val
-        let z: T = T::default();
-        let n: usize = if nr < nc {nr} else {nc};
-
-        for r in 0..n {
-            // p to record row swap
-            // P*A = U1
-            Array::permute_r(arr, r, dim, z, p, idx);
-
-            // check if max val is zero
-            // do not need to do row eliminations
-            let maxv: T = arr[idx(r, r, dim)];
-            if maxv == z {continue;}
-
-            // do row elimination
-            for r2 in (r+1)..nr {
-                // Li P*A = U2
-                let factor: T = arr[idx(r2, r, dim)] / maxv;
-                Array::gaussian_eliminate_r(arr, r, r2, dim, factor, idx);
-
-                // L*Li (P*A) = L (P A)
-
-                // record L in lower triangular
-                // we set (r2, r) place as default
-                arr[idx(r2, r, dim)] += factor;
-            }
-        }
-
-    }
 }
 
 

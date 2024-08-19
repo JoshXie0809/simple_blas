@@ -7,10 +7,12 @@ mod mult_method;
 mod div_method;
 mod convert_method;
 
+mod matrix_operations;
+
 // for matrix
 mod mmult_method;
 mod mdet_method;
-mod inv_method;
+mod minv_method;
 mod qr_method;
 
 mod index_trait;

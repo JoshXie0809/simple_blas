@@ -14,7 +14,7 @@ pub mod tests {
             true
         )?;
 
-        arr.inv()?;
+        arr.minv()?;
 
         let real_inv = Array::new_array_2d(
             Box::new([-2.0, 1.0, 1.5, -0.5]), 
@@ -53,7 +53,7 @@ pub mod tests {
             false
         )?;
 
-        arr.inv()?;
+        arr.minv()?;
         arr.mmult(&arr2)?;
 
         let real_inv = Array::new_array_2d(

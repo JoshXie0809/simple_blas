@@ -122,9 +122,11 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         // to get row echelon form
 
         arr[idx(r2, r, dim)] = T::default();
-        for c2 in (r+1)..nc {
-            arr[idx(r2, c2, dim)] -= factor * arr[idx(r, c2, dim)];
-        }
+        let start_col = r+1;
+        let end_col = nc;
+        
+        Array::row_i_minus_frow_j(arr, factor, r2, r, dim, idx, start_col, end_col);
+
     }
 
 }
@@ -160,117 +162,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
         }
     }
 
-    pub(crate) fn permute_r(
-        arr: &mut Box<[T]>, 
-        r:usize, dim: (usize, usize), z: T, 
-        p: &mut Vec<(usize, usize)>,
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-    ) {
-        let (nr, nc) = dim;
-        // now is rth row
-        // assume max element on this row
-
-        let mut maxr = r;
-        let mut maxv = Array::abs(arr[idx(r, r, dim)], z);
-
-        // find max in row under r
-        for i in 1..(nr - r) {
-            let val1 = Array::abs(arr[idx(r + i, r, dim)], z);
-            if maxv < val1 {
-                maxr = r + i;
-                maxv = val1;
-            }
-        }
-        
-        // we find the maxr,
-        // swap rth and maxr
-        if r != maxr {
-            Array::swap_r_ij(arr, r, maxr, 0, nc, idx, dim);
-            p.push((r, maxr));
-        }
-    }
-
-
-    pub(crate) fn permute_rc(
-        arr: &mut Box<[T]>, 
-        r:usize, dim: (usize, usize), z: T, 
-        pr: &mut Vec<(usize, usize)>,
-        pc: &mut Vec<(usize, usize)>,
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-    ) {
-        let (nr, nc) = dim;
-        // now is rth row
-        // assume max element on this row
-
-        let mut maxr = r;
-        let mut maxc = r;
-        let mut maxv = Array::abs(arr[idx(r, r, dim)], z);
-
-        // find maxv in (maxr, maxc) under (r, r)
-        for ri in 0..(nr - r) {
-            for ci in 0..(nc - r) {
-                let val1 = Array::abs(arr[idx(r + ri, r + ci, dim)], z);
-                if maxv < val1 {
-                    maxr = r + ri;
-                    maxc = r + ci;
-                    maxv = val1;
-                }
-            }
-        }
-        
-        // we find the maxr not equal r,
-        // swap rth row and maxr row
-        if r != maxr {
-            Array::swap_r_ij(arr, r, maxr, 0, nc, idx, dim);
-            pr.push((r, maxr));
-        }
-
-        // we find the maxc not equal r,
-        // swap rth col and maxc col
-        if r != maxc {
-            Array::swap_c_ij(arr, r, maxc, 0, nr, idx, dim);
-            pc.push((r, maxc));
-        }
-
-    }
-
-    // swap ith, jth row, in begin..end columns
-    pub(crate) fn swap_r_ij(arr: &mut Box<[T]>, 
-                  i: usize, j: usize, 
-                  begin_col: usize, 
-                  end_col: usize, 
-                  idx: fn(usize, usize, (usize, usize)) -> usize,
-                  dim: (usize, usize)) 
-    {
-        for c in begin_col..end_col {
-            // let idx1: usize = idx(i, c, dim);
-            // let idx2: usize = idx(j, c, dim);
-            // arr.swap(idx1, idx2);
-            arr.swap(idx(i, c, dim), idx(j, c, dim));
-        }
-    }
-
-    // swap ith, jth row, in begin..end columns
-    pub(crate) fn swap_c_ij(arr: &mut Box<[T]>, 
-        i: usize, j: usize, 
-        begin_row: usize, 
-        end_row: usize, 
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-        dim: (usize, usize)) 
-    {
-        for r in begin_row..end_row {
-            // let idx1: usize = idx(i, c, dim);
-            // let idx2: usize = idx(j, c, dim);
-            // arr.swap(idx1, idx2);
-            arr.swap(idx(r, i, dim), idx(r, j, dim));
-        }
-    }
-
-    pub(crate) fn abs(val: T, z: T) -> T {
-        if val < z {return z-val};
-        val
-    }
-
     pub fn compute_dist(arr1: &Self, arr2: &Self) -> Result<T, ListError> {
         match (arr1, arr2) {
             (Array::Array2D { arr: arr1, nr, nc, put_val_by_row },
@@ -297,7 +188,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> + Sub<Output=T>
 
             _ => return Err(ListError::MismatchedTypes),
         }
-
     }
 }
 
