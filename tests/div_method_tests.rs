@@ -4,17 +4,17 @@ mod tests {
     // use simple_blas::array::ListError;
 
     #[test]
-    #[should_panic]
-    fn div_method_scalar() {
-        let mut scalar = Array::new_scalar(1.0);
-        let mut other_scalar = Array::new_scalar(0.0);
+    fn div_method_scalar() -> Result<(), ListError> {
+        let mut scalar: Array<f64> = Array::new_scalar(1.0);
         
-        let _ = other_scalar.div(&scalar);
-        assert_eq!(other_scalar, Array::new_scalar(0.0));
+        scalar.div(2.0)?;
+        assert_eq!(scalar, Array::new_scalar(0.5));
 
-        if let Err(error) = scalar.div(&other_scalar) {
-            panic!("{:?}", error);
+        if let Err(error) = scalar.div(0.0) {
+            assert_eq!(error, ListError::DivisionByZero);
         };
+
+        Ok(())
     }
 
     #[test]
@@ -29,18 +29,16 @@ mod tests {
             Box::new([2.2, 2.4, 2.6])
         );
 
-        arr_1d.div(&other_arr_1d)?;
+        arr_1d.ele_div(&other_arr_1d)?;
         assert_eq!(arr_1d, Array::Array1D { arr: Box::new([0.5, 0.5, 0.5]) });
 
 
         // arr_1d devide scalar
-        let scalar = Array::Scalar(0.5);
-        arr_1d.div(&scalar)?;
+        arr_1d.div(0.5)?;
         assert_eq!(arr_1d, Array::Array1D { arr: Box::new([1.0, 1.0, 1.0]) });
 
         // test divide by zero
-        let scalar = Array::Scalar(0.0);
-        if let Err(err) = arr_1d.div(&scalar) {
+        if let Err(err) = arr_1d.div(0.0) {
             assert_eq!(err, ListError::DivisionByZero)
         }
 
@@ -63,7 +61,7 @@ mod tests {
         )?;
         
 
-        arr1.div(&arr2)?;
+        arr1.ele_div(&arr2)?;
 
         assert_eq!(arr1,
         Array::new_array_2d(
@@ -73,7 +71,6 @@ mod tests {
         );
 
         Ok(())
-
 
     }
 

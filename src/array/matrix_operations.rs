@@ -159,6 +159,25 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
 
+    pub(crate) fn self_mult_scalar_s (
+        arr: &mut [T], s: T
+    ) {
+        for i in 0..arr.len() {
+            arr[i] *= s;
+        }
+    }
+
+    pub(crate) fn self_div_scalar_s (
+        arr: &mut [T], s: T) -> Result<(), ListError>
+    {
+        if s == T::default() {return Err(ListError::DivisionByZero);}
+        for i in 0..arr.len() {
+            arr[i] = arr[i] / s;
+        }
+
+        Ok(())
+    }
+
     pub(crate) fn self_add_vec_v2 (
         arr: &mut [T], v2: &[T]
     ) -> Result<(), ListError>
@@ -186,6 +205,37 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         Ok(())
     }
+
+    pub(crate) fn self_ele_mult_vec_v2 (
+        arr: &mut [T], v2: &[T]
+    ) -> Result<(), ListError>
+    {
+        let length = arr.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+
+        for i in 0..length {
+            arr[i] *= v2[i]
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn self_ele_div_vec_v2 (
+        arr: &mut [T], v2: &[T]
+    ) -> Result<(), ListError>
+    {
+        let length = arr.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+        let z = T::default();
+        for i in 0..length {
+            let val = v2[i];
+            if val == z {return Err(ListError::DivisionByZero);}
+            arr[i] = arr[i] / val;
+        }
+
+        Ok(())
+    }
+
 
     pub(crate) fn self_add_mat_m (
         arr: &mut [T], other: &[T],
@@ -219,6 +269,46 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for r in 0..nr {
             for c in 0..nc {
                 arr[idx1(r, c, dim1)] -= other[idx2(r, c, dim2)];
+            }
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn self_ele_mult_mat_m (
+        arr: &mut [T], other: &[T],
+        dim1: (usize, usize), dim2: (usize, usize),
+        idx1: fn(usize, usize, (usize, usize)) -> usize,
+        idx2: fn(usize, usize, (usize, usize)) -> usize
+    ) -> Result<(), ListError>
+    {
+        if dim1 != dim2 {return Err(ListError::MismatchedDim);}
+        let (nr, nc) = dim1;
+
+        for r in 0..nr {
+            for c in 0..nc {
+                arr[idx1(r, c, dim1)] *= other[idx2(r, c, dim2)];
+            }
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn self_ele_div_mat_m (
+        arr: &mut [T], other: &[T],
+        dim1: (usize, usize), dim2: (usize, usize),
+        idx1: fn(usize, usize, (usize, usize)) -> usize,
+        idx2: fn(usize, usize, (usize, usize)) -> usize
+    ) -> Result<(), ListError>
+    {
+        if dim1 != dim2 {return Err(ListError::MismatchedDim);}
+        let (nr, nc) = dim1;
+        let z = T::default();
+        for r in 0..nr {
+            for c in 0..nc {
+                let val = other[idx2(r, c, dim2)];
+                if val == z {return Err(ListError::DivisionByZero);}
+                arr[idx1(r, c, dim1)] = arr[idx1(r, c, dim1)] / val;
             }
         }
 

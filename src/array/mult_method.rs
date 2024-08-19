@@ -1,71 +1,56 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
+use std::ops::{Add, Sub, AddAssign, Div, Mul, MulAssign, SubAssign};
 
 use super::Array;
 use super::ListError;
+use super::{idxr, idxc};
 
 impl<T> Array<T>
 where T: Add<Output=T> + Mul<Output=T> + Div<Output=T> 
++ Sub<Output=T> + PartialOrd
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default
 {
     
-    pub fn mult(&mut self, other: &Self) -> Result<(), ListError> {
+    pub fn mult(&mut self, val: T) -> Result<(), ListError> {
         
-        match (self, &other) {
-            (Self::Scalar(x), Self::Scalar(y)) 
-                => *x *= *y,
+        match self {
+            Self::Scalar(x) => *x *= val,
+
+            Self::Array1D { arr } => {
+                Array::self_mult_scalar_s(arr, val);
+            }
+
+            Self::Array2D { arr, ..} => {
+                Array::self_mult_scalar_s(arr, val);
+            }
             
-            (Self::Array1D { arr: arr1 }, 
-             Self::Array1D { arr: arr2 }) => {
-                let len1 = arr1.len();
-                if len1 != arr2.len() {
-                    return Err(ListError::DifferentLength1D);
-                }
+            _ => {return Err(ListError::MismatchedTypes)},
+        }
 
-                for i in 0..(len1) {
-                    arr1[i] *= arr2[i];
-                }
-            },
-    
-            (Self::Array1D { arr: arr1 }, 
-             Self::Scalar(val)) => {
-                let len1 = arr1.len();
-                for i in 0..(len1) {
-                    arr1[i] *= *val;
-                }
+        Ok(())
+    }
+
+    pub fn ele_mult(&mut self, other: &Self) -> Result<(), ListError> {
+        
+        match (self, other) {
+            (Self::Scalar(x), Self::Scalar(y)) => *x *= *y,
+
+            (Self::Array1D { arr: arr1 }, Self::Array1D { arr: arr2 })
+            => {
+                Array::self_ele_mult_vec_v2(arr1, arr2)?;
             },
 
-            (Self::Array2D { arr: arr1, nr: nr1, nc: nc1, put_val_by_row: by_row1}, 
-             Self::Array2D { arr: arr2, nr: nr2, nc: nc2, put_val_by_row: by_row2}) => {
-                
-                if (*nr1, *nc1) != (*nr2, *nc2) {
-                    return Err(ListError::MismatchedDim);
-                }
-
-                match (by_row1, by_row2) {
-                    (true, false) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[r * (*nc1) + c] *= arr2[c * (*nr1) + r];
-                            }
-                        }
-                    },
-
-                    (false, true) => {
-                        for r in 0..(*nr1) {
-                            for c in 0..(*nc1) {
-                                arr1[c * (*nr1) + r] *= arr2[r * (*nc1) + c];
-                            }
-                        }
-                    },
-
-                    _ => {
-                        for i in 0..(arr1.len()) {
-                            arr1[i] *= arr2[i];
-                        }
-                    },
-                }
-            },
+            (Array::Array2D { arr: arr1, nr: nr1, nc:nc1, put_val_by_row: by_row1 },
+                Array::Array2D { arr: arr2, nr: nr2, nc:nc2, put_val_by_row: by_row2, ..})
+               => {
+                   let dim1: (usize, usize) = (*nr1, *nc1);
+                   let dim2: (usize, usize) = (*nr2, *nc2);
+                   
+                   let idx1: fn(usize, usize, (usize, usize)) -> usize = if *by_row1 {idxr} else {idxc};
+                   let idx2: fn(usize, usize, (usize, usize)) -> usize = if *by_row2 {idxr} else {idxc};
+   
+                   Array::self_ele_mult_mat_m(arr1, arr2, dim1, dim2, idx1, idx2)?;
+               },
             
             _ => {return Err(ListError::MismatchedTypes)},
         }
