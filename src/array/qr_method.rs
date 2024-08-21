@@ -49,3 +49,36 @@ Div<Output=T> + Sub<Output=T>
     }
 }
 
+#[cfg(test)]
+pub mod tests {
+    use crate::array::{idxr, Array};
+
+    // householder reflector
+    #[test]
+    fn reflector_test_1() {
+        let a_mat = vec![
+           -1.0, -1.0, 1.0,
+           1.0, 1.0, 3.0,
+           -1.0, -1.0, 5.0,
+           1.0, 3.0, 7.0
+        ];
+
+        let dim: (usize, usize) = (4_usize, 3_usize);
+        let mut v1: Vec<f64> = vec![];
+        let mut reflector: Vec<f64> = vec![0.0; 4];
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
+        
+        for r in 0..=3_usize {
+            v1.push(a_mat[idx(r, 0, dim)]);
+        }
+
+        Array::reflector(&v1, &mut reflector);
+
+        println!("{:?}", reflector);
+
+        // let mut res = vec![0.0; 3];
+        // Array::vec_b_dot_mat_a(&a_mat, &reflector, &mut res, dim, true);
+        // println!("{:?}", res);
+
+    }
+}

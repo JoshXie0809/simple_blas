@@ -2,7 +2,6 @@
 pub mod test {
     use simple_blas::array::{Array, ListError};
 
-
     #[test]
     fn qr_arr_2d_1() {
         let arr = Array::Scalar(1.0);
@@ -86,6 +85,5 @@ pub mod test {
         assert!(dist < 1e-10);
         Ok(())
     }
-    
 }
 

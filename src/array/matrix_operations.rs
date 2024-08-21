@@ -343,7 +343,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
     
-    pub(crate) fn mat_a_dot_vec_b(
+    pub(crate) fn mat_a_dot_vec_b (
         am: &[T], b: &[T], res: &mut [T],
         dim: (usize, usize), 
         by_row: bool,
@@ -353,12 +353,35 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         // b: n x 1
         // res: m x 1
         let (nr, nc) = dim;
+        if nc != b.len() {panic!("matrix total number of coulmn not matched vector length")}
+        
         for r in 0..nr {
             let mut sum = T::default();
             for i in 0..nc {
                 sum += am[idx(r, i, dim)] * b[i];
             }
             res[r] = sum;
+        }
+    }
+
+    pub(crate) fn vec_b_dot_mat_a (
+        am: &[T], b: &[T], res: &mut [T],
+        dim: (usize, usize), 
+        by_row: bool,
+    ) {
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        // A: m x n
+        // b: n x 1
+        // res: m x 1
+        let (nr, nc) = dim;
+        if nr != b.len() {panic!("matrix total number of row not matched vector length")}
+
+        for c in 0..nc {
+            let mut sum = T::default();
+            for i in 0..nr {
+                sum += am[idx(i, c, dim)] * b[i];
+            }
+            res[c] = sum;
         }
     }
 
@@ -548,7 +571,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     // compute vector norm ||v||_2
     pub(crate) fn norm_2(v1: &[T]) -> T{
         let mut d = v1[0] * v1[0];
-        for i in 1..v1.len() {
+        for i in 1..(v1.len()) {
             d += v1[i] * v1[i];
         }
         return d.sqrt();
@@ -561,13 +584,14 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let y_norm2: T = Array::norm_2(y);
 
         let z: T = T::default();
-        let sign_y1: T = if y[0] < z {T::from(1.0_f32)} else {T::from(-1.0_f32)};
+        let sign_y1: T = if y[0] < z {T::from(-1.0_f32)} else {T::from(1.0_f32)};
         let y1_abs: T = sign_y1 * y[0];
         
-        let w_norm2: T = T::from(2_f32) * y_norm2 * (y_norm2 + y1_abs);
+        let w_norm2: T = T::from(2.0_f32) * y_norm2 * (y_norm2 + y1_abs);
+        let w_norm2 = w_norm2.sqrt();
         
         let ylen = y.len();
-        if ylen != reflector.len() {panic!("vec and its reflector must has same name")}
+        if ylen != reflector.len() {panic!("vec and its reflector must has same length")}
         
         reflector[0] = (y[0] + sign_y1 * y_norm2) / w_norm2;
         for i in 1..y.len() {
