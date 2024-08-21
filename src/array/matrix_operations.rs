@@ -424,6 +424,22 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default + PartialOrd + From<f32> + Sqrt
 {
+    // distance norm 2
+    
+    pub(crate) fn dist_n2_vec_v1_v2(
+        v1: &[T], v2: &[T]
+    ) -> Result<T, ListError> {
+        let mut sum = T::default();
+        let length = v1.len();
+        if length != v2.len() {return Err(ListError::DifferentLength1D);}
+        for i in 0..length {
+            let val = v1[i] - v2[i];
+            sum += val.powi(2);
+        }
+
+        Ok(sum.sqrt())
+    }
+
     // solve linear algebra
 
     // LU x = pb
@@ -807,16 +823,25 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
 pub trait Sqrt {
     fn sqrt(self) -> Self;
+    fn powi(self, n: i32) -> Self;
 }
 
 impl Sqrt for f32 {
     fn sqrt(self) -> Self {
         self.sqrt()
     }
+
+    fn powi(self, n: i32) -> Self {
+        self.powi(n)
+    }
 }
 
 impl Sqrt for f64 {
     fn sqrt(self) -> Self {
         self.sqrt()
+    }
+
+    fn powi(self, n: i32) -> Self {
+        self.powi(n)
     }
 }

@@ -73,7 +73,32 @@ pub mod tests {
         }
 
         // a_mat = q*r
-        let d = Array::dist_n1_vec_v1_v2(&a_mat, &r)?;
+        let d = Array::dist_n2_vec_v1_v2(&a_mat, &r)?;
+        println!("{:e}", d);
+        assert!(d < 1e-10);
+        Ok(())
+    }
+
+    #[test]
+    fn reflector_test_2() -> Result<(), ListError> {
+        let a_mat = vec![
+           -1.15, -1.210, 1.33,
+            1.54,  3.123, 3.34,
+           -1.22, -1.076, 5.09,
+            1.06,  3.079, 7.06
+        ];
+
+        let dim: (usize, usize) = (4_usize, 3_usize);
+        let idx = idxr;
+
+        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
+
+        for q in q_factor.iter().rev() {
+            Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
+        }
+
+        // a_mat = q*r
+        let d = Array::dist_n2_vec_v1_v2(&a_mat, &r)?;
         println!("{:e}", d);
         assert!(d < 1e-10);
         Ok(())
