@@ -342,8 +342,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             }
         }
     }
-
-    
     
     pub(crate) fn mat_a_dot_vec_b(
         am: &[T], b: &[T], res: &mut [T],
@@ -374,7 +372,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for i in 0..length {
             sum += Array::abs(v1[i] - v2[i], z)
         }
-        
+
         Ok(sum)
     }
 
@@ -544,6 +542,36 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 // we set (r2, r) place as default
                 arr[idx(r2, r, dim)] += factor;
             }
+        }
+    }
+
+    // compute vector norm ||v||_2
+    pub(crate) fn norm_2(v1: &[T]) -> T{
+        let mut d = v1[0] * v1[0];
+        for i in 1..v1.len() {
+            d += v1[i] * v1[i];
+        }
+        return d.sqrt();
+    }
+
+    // find householder reflector
+    pub(crate) fn reflector(y: &[T], reflector: &mut [T]) {
+        // compute ||w||_2
+        // ||w||_2^2  = 2 ||y|| (||y|| + |y_1|)
+        let y_norm2: T = Array::norm_2(y);
+
+        let z: T = T::default();
+        let sign_y1: T = if y[0] < z {T::from(1.0_f32)} else {T::from(-1.0_f32)};
+        let y1_abs: T = sign_y1 * y[0];
+        
+        let w_norm2: T = T::from(2_f32) * y_norm2 * (y_norm2 + y1_abs);
+        
+        let ylen = y.len();
+        if ylen != reflector.len() {panic!("vec and its reflector must has same name")}
+        
+        reflector[0] = (y[0] + sign_y1 * y_norm2) / w_norm2;
+        for i in 1..y.len() {
+            reflector[i] = y[i] / w_norm2;
         }
     }
 

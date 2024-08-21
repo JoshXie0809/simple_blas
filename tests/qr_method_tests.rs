@@ -15,8 +15,8 @@ pub mod test {
     fn qr_arr_2d_2() -> Result<(), ListError> {
         let arr = Array::new_array_2d(
             Box::new([
-                61.01, 72.02, 
-                -94.05, 85.01,
+                194.0, 14.0, 
+                245.0, 29.0,
             ]), 
             (2, 2), 
             true
@@ -24,8 +24,12 @@ pub mod test {
 
         let (mut q, r) = arr.mqr()?;
 
-        q.mmult(&r)?;
+        println!("q: {:?}", q);
+        println!("r: {:?}", r);
 
+        q.mmult(&r)?;
+        
+        println!("q: {:?}", q);
         let dist = Array::compute_dist(&arr, &q)?;
         assert!(dist < 1e-10);
         
