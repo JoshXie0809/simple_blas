@@ -85,5 +85,44 @@ pub mod test {
         assert!(dist < 1e-10);
         Ok(())
     }
+
+    #[test]
+    fn qr_householder_arr_2d_1() -> Result<(), ListError> {
+        let arr = Array::new_array_2d(
+            Box::new([
+                1.01, 2.02, 
+                3.03, -4.05, 
+                5.01, 6.97
+            ]), 
+            (3, 2), 
+            true
+        )?;
+
+        let (_q, _r) = arr.mqr_householder()?;
+        Ok(())
+    }
+
+    #[test]
+    fn qr_householder_arr_2d_2() -> Result<(), ListError> {
+        let arr = Array::new_array_2d(
+            Box::new([
+                1.01, 2.02, 
+                3.03, -4.05, 
+                5.01, 6.97
+            ]), 
+            (3, 2), 
+            true
+        )?;
+
+        let (mut q, mut r) = arr.mqr_householder()?;
+        q.reverse();
+
+        Array::q_factor_mult_mat_a(q, &mut r)?;
+
+        let d = Array::compute_dist(&arr, &r)?;
+        assert!(d < 1e-10);
+
+        Ok(())
+    }
 }
 

@@ -1,4 +1,4 @@
-use super::{Array, ListError};
+use super::{Array, ListError, idxr, idxc};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign};
 use crate::array::matrix_operations::Sqrt;
 
@@ -46,6 +46,48 @@ Div<Output=T> + Sub<Output=T>
         };
 
         Ok((q, r))
+    }
+
+    pub fn mqr_householder(&self) -> Result<(Vec<Vec<T>>, Array<T>), ListError>{
+        match self {
+            Array::Array2D { arr, nr, nc, put_val_by_row } 
+            => {
+                let dim: (usize, usize) = (*nr, *nc);
+                let by_row: bool = *put_val_by_row;
+                if *nr < *nc {return Err(ListError::MatrixQRHouseHolderDimError);}
+                let (q_factor, r) = Array::qr_householder(&arr, dim, by_row);
+               
+                let r = Array::new_array_2d(
+                    r.into_boxed_slice(), 
+                    (*nr as isize, *nc as isize), 
+                    by_row
+                )?;
+
+                Ok((q_factor, r))
+            },
+
+            _ => return Err(ListError::MismatchedTypes),
+        }
+    }
+
+    pub fn q_factor_mult_mat_a(q_factor: Vec<Vec<T>>, ma: &mut Self) -> Result<(), ListError>{
+        match ma {
+            Array::Array2D { arr, nr, nc, put_val_by_row } 
+            => {
+                let dim: (usize, usize) = (*nr, *nc);
+                let idx: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row {idxr} else {idxc};
+                for q in q_factor.iter() {
+                    Array::reflector_mat_dot_mat(&q, arr, dim, idx);
+                }
+            }
+
+            _ => return Err(ListError::MismatchedTypes)
+        }
+
+        
+        
+
+        Ok(())
     }
 }
 

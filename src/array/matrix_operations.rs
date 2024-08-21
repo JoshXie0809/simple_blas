@@ -629,6 +629,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
 
+    // for reflator vector v
+    // H = I - 2 vv'
+    // H A
     pub(crate) fn reflector_mat_dot_mat(
         v1: &[T], // refector vector which build H matrix
         ma: &mut [T], // mat_a,
@@ -652,6 +655,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
 
+    // q_factor A = r
+    // H[n] H[n-1] .... A = r
     pub(crate) fn qr_householder(
         ma: &[T],
         dim: (usize, usize),
