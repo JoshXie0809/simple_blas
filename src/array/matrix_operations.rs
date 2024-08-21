@@ -343,6 +343,20 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
     
+    pub(crate) fn vec_a_dot_vec_b (
+        va: &[T], vb: &[T]
+    ) -> T 
+    {
+        let valen: usize = va.len();
+        if valen != vb.len() {panic!("cannot dot two different length vector")}
+        
+        let mut sum = va[0] * vb[0];
+        for i in 1..valen {
+            sum += va[i] * vb[i]
+        }
+        sum
+    }
+
     pub(crate) fn mat_a_dot_vec_b (
         am: &[T], b: &[T], res: &mut [T],
         dim: (usize, usize), 
@@ -597,6 +611,58 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for i in 1..y.len() {
             reflector[i] = y[i] / w_norm2;
         }
+    }
+
+    pub(crate) fn reflector_mat_dot_mat(
+        v1: &[T], // refector vector which build H matrix
+        ma: &mut [T], // mat_a,
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize
+    ) {
+        let (nr, nc) = dim;
+        let k: usize = nr - v1.len(); // k must >= 0
+
+        for c in k..nc {
+            // constant
+            let mut sum: T = T::default();
+            for r in k..nr {
+               sum += v1[r-k] * ma[idx(r, c, dim)];
+            }
+            
+            let two = T::from(2.0_f32);
+            for r in k..nr {
+                ma[idx(r, c, dim)] -= two * sum * v1[r - k];
+            }
+        }
+    }
+
+    pub(crate) fn qr_householder(
+        ma: &[T],
+        dim: (usize, usize),
+        by_row: bool
+    ) -> (Vec<Vec<T>>, Vec<T>) {
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        let (nr, nc) = dim;
+        let mut q_factor: Vec<Vec<T>> = vec![];
+        if nr < nc {panic!("nr must >= nc")}
+        let mut a_mat: Vec<T> = ma.to_vec().clone();
+        
+        let z = T::default();
+        for c in 0..nc {
+            let mut reflector: Vec<T> = vec![z; nr-c];
+            let mut v1: Vec<T> = vec![z; nr-c];
+                
+            for i in c..nr {
+                v1[i-c] = a_mat[idx(i, c, dim)];
+            }
+
+            Array::reflector(&v1, &mut reflector);
+            Array::reflector_mat_dot_mat(&reflector, &mut a_mat, dim, idx);
+            q_factor.push(reflector);
+        }
+
+        // the a_mat finally become R
+        (q_factor, a_mat)
     }
 
     pub(crate) fn qr(

@@ -51,34 +51,31 @@ Div<Output=T> + Sub<Output=T>
 
 #[cfg(test)]
 pub mod tests {
-    use crate::array::{idxr, Array};
+    use crate::array::{idxr, Array, ListError};
 
     // householder reflector
     #[test]
-    fn reflector_test_1() {
+    fn reflector_test_1() -> Result<(), ListError> {
         let a_mat = vec![
            -1.0, -1.0, 1.0,
-           1.0, 1.0, 3.0,
+           1.0, 3.0, 3.0,
            -1.0, -1.0, 5.0,
            1.0, 3.0, 7.0
         ];
 
         let dim: (usize, usize) = (4_usize, 3_usize);
-        let mut v1: Vec<f64> = vec![];
-        let mut reflector: Vec<f64> = vec![0.0; 4];
-        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
-        
-        for r in 0..=3_usize {
-            v1.push(a_mat[idx(r, 0, dim)]);
+        let idx = idxr;
+
+        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
+
+        for q in q_factor.iter().rev() {
+            Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
         }
 
-        Array::reflector(&v1, &mut reflector);
-
-        println!("{:?}", reflector);
-
-        // let mut res = vec![0.0; 3];
-        // Array::vec_b_dot_mat_a(&a_mat, &reflector, &mut res, dim, true);
-        // println!("{:?}", res);
-
+        // a_mat = q*r
+        let d = Array::dist_n1_vec_v1_v2(&a_mat, &r)?;
+        println!("{:e}", d);
+        assert!(d < 1e-10);
+        Ok(())
     }
 }
