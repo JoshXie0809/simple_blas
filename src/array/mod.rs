@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign};
+use std::{mem::swap, ops::{Add, AddAssign, Div, Mul, MulAssign, SubAssign}};
 
 
 mod add_method;
@@ -133,6 +133,19 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok(
             Array::Array2D { arr, nr: dim_u.0, nc: dim_u.1, put_val_by_row }
         )
+    }
+
+    pub fn transpose(&mut self) -> Result<(), ListError>{
+        match self {
+            Array::Array2D { arr: _arr, nr, nc, put_val_by_row }
+            => {
+                swap(nr, nc);
+                *put_val_by_row =  !*put_val_by_row;
+            }
+            _ => return Err(ListError::MismatchedTypes), 
+        }
+
+        Ok(())
     }
 
 }

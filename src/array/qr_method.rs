@@ -70,22 +70,31 @@ Div<Output=T> + Sub<Output=T>
         }
     }
 
-    pub fn q_factor_mult_mat_a(q_factor: Vec<Vec<T>>, ma: &mut Self) -> Result<(), ListError>{
+    pub fn mq_factor_mult_mat_a(q_factor: &Vec<Vec<T>>, ma: &mut Self) -> Result<(), ListError>{
         match ma {
             Array::Array2D { arr, nr, nc, put_val_by_row } 
             => {
                 let dim: (usize, usize) = (*nr, *nc);
                 let idx: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row {idxr} else {idxc};
-                for q in q_factor.iter() {
-                    Array::reflector_mat_dot_mat(&q, arr, dim, idx);
-                }
+                Array::q_factor_dot_ma(q_factor,arr, dim, idx, false);
             }
 
             _ => return Err(ListError::MismatchedTypes)
-        }
+        }        
 
-        
-        
+        Ok(())
+    }
+
+    pub fn mmat_a_mult_q_factor(ma: &mut Self, q_factor: &Vec<Vec<T>>) -> Result<(), ListError>{
+        match ma {
+            Array::Array2D { arr, nr, nc, put_val_by_row } 
+            => {
+                let dim: (usize, usize) = (*nr, *nc);
+                Array::ma_dot_q_factor(arr, dim, *put_val_by_row, q_factor);
+            }
+
+            _ => return Err(ListError::MismatchedTypes)
+        }        
 
         Ok(())
     }
@@ -106,11 +115,11 @@ pub mod tests {
         ];
 
         let dim: (usize, usize) = (4_usize, 3_usize);
-        let idx = idxr;
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
 
         let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
 
-        for q in q_factor.iter().rev() {
+        for q in q_factor.iter() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
         }
 
@@ -131,11 +140,11 @@ pub mod tests {
         ];
 
         let dim: (usize, usize) = (4_usize, 3_usize);
-        let idx = idxr;
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
 
         let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
 
-        for q in q_factor.iter().rev() {
+        for q in q_factor.iter() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
         }
 

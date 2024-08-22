@@ -655,8 +655,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
 
-    // q_factor A = r
-    // H[n] H[n-1] .... A = r
+    // A = q_factor * r
+    //  A = H[1] H[2] ... H[n] r
     pub(crate) fn qr_householder(
         ma: &[T],
         dim: (usize, usize),
@@ -664,11 +664,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     ) -> (Vec<Vec<T>>, Vec<T>) {
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
         let (nr, nc) = dim;
-        let mut q_factor: Vec<Vec<T>> = vec![];
-        if nr < nc {panic!("nr must >= nc")}
-        let mut a_mat: Vec<T> = ma.to_vec().clone();
         
+        if nr < nc {panic!("nr must >= nc")}
+
+        let mut a_mat: Vec<T> = ma.to_vec().clone();
+        let mut q_factor: Vec<Vec<T>> = vec![vec![]; nc];
         let z = T::default();
+
         for c in 0..nc {
             let mut reflector: Vec<T> = vec![z; nr-c];
             let mut v1: Vec<T> = vec![z; nr-c];
@@ -679,11 +681,47 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             Array::reflector(&v1, &mut reflector);
             Array::reflector_mat_dot_mat(&reflector, &mut a_mat, dim, idx);
-            q_factor.push(reflector);
+            q_factor[(nc-1) - c] = reflector;
         }
 
         // the a_mat finally become R
         (q_factor, a_mat)
+    }
+
+    pub(crate) fn q_factor_dot_ma(
+        q_factor: & Vec<Vec<T>>,
+        ma: &mut [T],
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        transpose: bool
+    ) {
+        if transpose {
+            for q in q_factor.iter().rev() {
+                Array::reflector_mat_dot_mat(q, ma, dim, idx);
+            }
+        } else {
+            for q in q_factor.iter() {
+                Array::reflector_mat_dot_mat(q, ma, dim, idx);
+            }
+        }
+        
+    }
+
+    pub(crate) fn ma_dot_q_factor(
+        ma: &mut [T],
+        dim: (usize, usize),
+        by_row: bool,
+        q_factor: & Vec<Vec<T>>,
+    ) {
+        // A * H[1] H[2] ... H[N]
+        // (H[N]H[N-1]... H[1] A')'
+        
+        // for A'
+        let (nr, nc) = dim;
+        let dimt: (usize, usize) = (nc, nr);
+        let by_row_t: bool = !by_row;
+        let idxt: fn(usize, usize, (usize, usize)) -> usize = if by_row_t {idxr} else {idxc};
+        Array::q_factor_dot_ma(q_factor, ma, dimt, idxt, true);
     }
 
     pub(crate) fn qr(

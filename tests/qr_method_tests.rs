@@ -114,14 +114,37 @@ pub mod test {
             true
         )?;
 
-        let (mut q, mut r) = arr.mqr_householder()?;
-        q.reverse();
-
-        Array::q_factor_mult_mat_a(q, &mut r)?;
-
+        let (q, mut r) = arr.mqr_householder()?;
+        Array::mq_factor_mult_mat_a(&q, &mut r)?;
         let d = Array::compute_dist(&arr, &r)?;
         assert!(d < 1e-10);
+        Ok(())
+    }
 
+    #[test]
+    fn qr_householder_arr_2d_3() -> Result<(), ListError> {
+        let arr = Array::new_array_2d(
+            Box::new([
+                -1.03, 4.023, 
+                17.03, -41.05, 
+                5.01, 6.97,
+                11.01, -9.23,
+            ]), 
+            (4, 2), 
+            true
+        )?;
+
+        let (mut q, mut r) = arr.mqr_householder()?;
+        q.reverse();
+        r.transpose()?;
+
+        Array::mmat_a_mult_q_factor( &mut r, &q)?;
+
+        r.transpose()?;
+        
+        let d = Array::compute_dist(&arr, &r)?;
+        println!("{:e}", d);
+        assert!(d < 1e-10);
         Ok(())
     }
 }
