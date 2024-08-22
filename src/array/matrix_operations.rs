@@ -751,7 +751,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let z:    T = T::default();
 
         let n_iter: usize = 
-        if let Some(ni) = max_iter {ni} else {100_usize};
+        if let Some(ni) = max_iter {ni} else {1000_usize};
 
         let mtol: T =
         if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
@@ -772,23 +772,24 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             if isbreak {break;}
 
-            // wilkinson shift
-            let b11: T = mat_a[idx(n-2, n-2, dim)];
-            let b12: T = mat_a[idx(n-2, n-1, dim)];
-            let b21: T = mat_a[idx(n-1, n-2, dim)];
-            let b22: T = mat_a[idx(n-1, n-1, dim)];
-            let mut lambda1 = z;
-            let mut lambda2 = z;
-            let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
-            lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
-            lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
-            let d1: T = Array::abs(lambda1 - b22, z);
-            let d2: T = Array::abs(lambda2 - b22, z);
-            let s: T = if d1 < d2 {lambda1} else {lambda2};
+            // // wilkinson shift
+            // let b11: T = mat_a[idx(n-2, n-2, dim)];
+            // let b12: T = mat_a[idx(n-2, n-1, dim)];
+            // let b21: T = mat_a[idx(n-1, n-2, dim)];
+            // let b22: T = mat_a[idx(n-1, n-1, dim)];
+            // let mut lambda1 = z;
+            // let mut lambda2 = z;
+            // let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
+            // lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
+            // lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
+            // let d1: T = Array::abs(lambda1 - b22, z);
+            // let d2: T = Array::abs(lambda2 - b22, z);
+            // let s: T = if d1 < d2 {lambda1} else {lambda2};
             
+            let s: T = mat_a[idx(n-1, n-1, dim)];
             // make shift
             for i in 0..n {
-                mat_a[idx(i, i, dim)] -= s
+                    mat_a[idx(i, i, dim)] -= s
             }
             
             let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
@@ -797,7 +798,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             // recover shift
             for i in 0..n {
-                mat_a[idx(i, i, dim)] += s
+                    mat_a[idx(i, i, dim)] += s
             }
         }
 
