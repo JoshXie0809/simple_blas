@@ -713,7 +713,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 Array::reflector_mat_dot_mat(q, ma, dim, idx);
             }
         }
-        
     }
 
     pub(crate) fn ma_dot_q_factor(
@@ -733,6 +732,48 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Array::q_factor_dot_ma(q_factor, ma, dimt, idxt, true);
     }
 
+    // Hessenberg_form
+    pub(crate) fn hessenberg(
+        ma: &mut [T],
+        dim: (usize, usize),
+        by_row: bool
+    ) -> Result<(), ListError>
+    {
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        let (nr, nc) = dim;
+        if nr != nc {panic!("hessenberg fn need SQUARE MATRIX")}
+        let n: usize = nr;
+        let z: T = T::default();
+        let two: T = T::from(2.0_f32);
+
+        
+        for c in 0..(n-2) {
+            let mut v1: Vec<T> = vec![z; nr-c-1];
+            let mut reflector: Vec<T> = vec![z; nr-c-1];    
+            for i in (c+1)..n {
+                v1[i-c-1] = ma[idx(i, c, dim)];
+            }
+            Array::reflector(&v1, &mut reflector)?;
+
+            // iter
+            // A = Q A
+            for c in c..nc {
+                // constant
+                let mut sum: T = T::default();
+
+                for r in (c+1)..nr {
+                   sum += reflector[r-c-1] * ma[idx(r, c, dim)];
+                }
+                
+                for r in (c+1)..nr {
+                    ma[idx(r, c, dim)] -= two * sum * reflector[r-c-1];
+                }
+            }
+        }        
+
+        Ok(())
+    }
+
     pub(crate) fn eigen_values(
         ma: &[T], dim: (usize, usize), 
         by_row: bool, 
@@ -744,6 +785,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         if nr != nc {return Err(ListError::EigenMismatchedDim);}
         let mut mat_a: Vec<T> = ma.to_vec();
 
+        // hessenberg form
+        Array::hessenberg(&mut mat_a, dim, by_row)?;
+
         let n: usize = nr;
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
         let two:  T = T::from(2.0_f32);
@@ -751,7 +795,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let z:    T = T::default();
 
         let n_iter: usize = 
-        if let Some(ni) = max_iter {ni} else {1000_usize};
+        if let Some(ni) = max_iter {ni} else {100_000_usize};
 
         let mtol: T =
         if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
@@ -786,28 +830,27 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             // let d2: T = Array::abs(lambda2 - b22, z);
             // let s: T = if d1 < d2 {lambda1} else {lambda2};
             
-            let s: T = mat_a[idx(n-1, n-1, dim)];
-            // make shift
-            for i in 0..n {
-                    mat_a[idx(i, i, dim)] -= s
-            }
+            // // make shift
+            // for i in 0..n {
+            //         mat_a[idx(i, i, dim)] -= s
+            // }
             
             let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
             Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
             mat_a = r;
 
-            // recover shift
-            for i in 0..n {
-                    mat_a[idx(i, i, dim)] += s
-            }
+            // // recover shift
+            // for i in 0..n {
+            //         mat_a[idx(i, i, dim)] += s
+            // }
         }
 
-        let mut eigen_values: Vec<T> = vec![z; n];
-        for i in 0..n {
-            eigen_values[i] = mat_a[idx(i, i, dim)];
-        }
+        // let mut eigen_values: Vec<T> = vec![z; n];
+        // for i in 0..n {
+        //     eigen_values[i] = mat_a[idx(i, i, dim)];
+        // }
         
-        Ok(eigen_values)
+        Ok(mat_a)
     }
 
     pub(crate) fn qr(
