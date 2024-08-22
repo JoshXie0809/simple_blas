@@ -697,7 +697,21 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Ok((q_factor, a_mat))
     }
 
-    pub(crate) fn q_factor_dot_ma(
+    pub(crate) fn get_qm(q_factor: &Vec<Vec<T>>, n: usize) -> Vec<T> {
+        let mut ma: Vec<T> = vec![T::default(); n * n];
+        let dim: (usize, usize) = (n, n);
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
+
+        for i in 0..n {
+            ma[idx(i, i, dim)] = T::from(1.0_f32);
+        }
+
+        Array::q_factor_dot_ma(q_factor, &mut ma, dim, idx, false);
+
+        ma
+    }
+
+    pub(crate) fn q_factor_dot_ma (
         q_factor: & Vec<Vec<T>>,
         ma: &mut [T],
         dim: (usize, usize),
@@ -721,9 +735,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         by_row: bool,
         q_factor: & Vec<Vec<T>>,
     ) {
-        // A * H[1] H[2] ... H[N]
-        // (H[N]H[N-1]... H[1] A')'
-        
+        // A * Q
+        // (Q' A')'
         // for A'
         let (nr, nc) = dim;
         let dimt: (usize, usize) = (nc, nr);
@@ -800,29 +813,26 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         let n: usize = nr;
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        let two:  T = T::from(2.0_f32);
-        let four: T = T::from(4.0_f32);
+        // let two:  T = T::from(2.0_f32);
+        // let four: T = T::from(4.0_f32);
         let z:    T = T::default();
 
         let n_iter: usize = 
-        if let Some(ni) = max_iter {ni} else {100_000_usize};
+        if let Some(ni) = max_iter {ni} else {1_0000_usize};
 
-        let mtol: T =
+        let _mtol: T =
         if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
 
         for _iter in 0..n_iter {
-            // check sub-diagnol whether or not close to zero
-            let mut isbreak = true;
-
-            for r in 0..nr-1 {
-                    if Array::abs(mat_a[idx(r+1, r, dim)], z) > mtol {
-                        isbreak = false;
-                        break;
-                    }
-                if !isbreak {break;}
-            }
-
-            if isbreak {break;}
+            // // check sub-diagnol whether or not close to zero
+            // let mut isbreak = true;
+            // for r in 0..nr-1 {
+            //     if Array::abs(mat_a[idx(r+1, r, dim)], z) > mtol {
+            //         isbreak = false;
+            //         break;
+            //     }
+            // }
+            // if isbreak {break;}
 
             // // wilkinson shift
             // let b11: T = mat_a[idx(n-2, n-2, dim)];
@@ -838,29 +848,37 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             // let d2: T = Array::abs(lambda2 - b22, z);
             // let s: T = if d1 < d2 {lambda1} else {lambda2};
             
-            let s = mat_a[idx(n-1, n-1, dim)];
+            // let s = mat_a[idx(n-1, n-1, dim)];
 
-            // make shift
-            for i in 0..n {
-                    mat_a[idx(i, i, dim)] -= s
-            }
+            // // make shift
+            // for i in 0..n {
+            //         mat_a[idx(i, i, dim)] -= s
+            // }
             
-            let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
-            Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
-            mat_a = r;
+            let (qf, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
 
-            // recover shift
-            for i in 0..n {
-                    mat_a[idx(i, i, dim)] += s
-            }
+            // Array::ma_dot_q_factor(&mut r, dim, by_row, &qf);
+            // mat_a = r;
+
+            let qm = Array::get_qm(&qf, n);
+            let mut res: Vec<T> = vec![z; n * n];
+            Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, dim, n, by_row, true);
+            mat_a = res;
+
+            
+
+            // // recover shift
+            // for i in 0..n {
+            //         mat_a[idx(i, i, dim)] += s
+            // }
         }
 
         let mut eigen_values: Vec<T> = vec![z; n];
         for i in 0..n {
             eigen_values[i] = mat_a[idx(i, i, dim)];
         }
-        
         Ok(eigen_values)
+
     }
 
     pub(crate) fn qr(

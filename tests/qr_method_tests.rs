@@ -126,30 +126,50 @@ pub mod test {
         let arr = Array::new_array_2d(
             Box::new([
                 1.0, 1.0, 
-                2.0, 2.0,
-                3.0, 3.0,
-                4.0, 4.0,
+                2.0, 2.1,
+                3.0, 3.3,
+                4.0, 4.5,
             ]), 
             (4, 2), 
             true
         )?;
 
+        // A = qr
         let (mut q, mut r) = arr.mqr_householder()?;
-
-        println!("q: {:?}", q);
-        println!("r: {:?}", r);
+        
+        // qr = (r'q')'
 
         q.reverse();
         r.transpose()?;
 
+        // a = r'q'
         Array::mmat_a_mult_q_factor( &mut r, &q)?;
-
+        // a = a'
         r.transpose()?;
         
         let d = Array::compute_dist(&arr, &r)?;
         println!("r: {:?}", r);
         println!("{:e}", d);
         assert!(d < 1e-10);
+        Ok(())
+    }
+
+    #[test]
+    fn qr_householder_arr_2d_4() -> Result<(), ListError> {
+        let arr = Array::new_array_2d(
+            Box::new([
+                1.0, 2.0, 
+                4.0, 5.0,
+                5.0, 11.0,
+            ]), 
+            (3, 2), 
+            true
+        )?;
+
+        // A = qr
+        let (_q, r) = arr.mqr_householder()?;
+        println!("r: {:?}", r);
+
         Ok(())
     }
 }

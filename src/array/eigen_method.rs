@@ -106,12 +106,30 @@ pub mod tests {
     }
 
     #[test]
-    fn eigen_method_arr_2d_2() -> Result<(), ListError>{
-        let ma = vec![
-            2.0, 0.0, 0.0,
-            7.0, 11.0, 0.0,
-            17.0, 19.0, 23.0
+    fn eigen_method_arr_2d_2() -> Result<(), ListError> {
+        let ma: Vec<f64> = vec![
+             1.01, 0.0, 0.0,
+             5.07, 6.07, 0.0,
+             7.21, 3.12, 5.20
         ];
+
+
+        let dim: (usize, usize) = (3, 3);
+
+        let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
+        println!("{:?}", e_vals);
+
+        Ok(())
+    }
+
+    #[test]
+    fn eigen_method_arr_2d_3() -> Result<(), ListError> {
+        let ma: Vec<f64> = vec![
+             1.01, 2.02, 3.79,
+             5.07, 6.07, 11.95,
+             7.21, 3.12, 5.20
+        ];
+
 
         let dim: (usize, usize) = (3, 3);
 
