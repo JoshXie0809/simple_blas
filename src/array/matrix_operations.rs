@@ -608,7 +608,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     }
 
     // find householder reflector
-    pub(crate) fn reflector(y: &[T], reflector: &mut [T]) {
+    pub(crate) fn reflector(y: &[T], reflector: &mut [T]) -> Result<(), ListError> 
+    {
         // compute ||w||_2
         // ||w||_2^2  = 2 ||y|| (||y|| + |y_1|)
         let y_norm2: T = Array::norm_2(y);
@@ -620,7 +621,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let w_norm2: T = T::from(2.0_f32) * y_norm2 * (y_norm2 + y1_abs);
         let w_norm2 = w_norm2.sqrt();
 
-        if w_norm2 < T::from(1e-20_f32) {panic!("y's length is to small to find refletor")}
+        if w_norm2 < T::from(1e-20_f32) {return Err(ListError::ReflectorZeroLength);}
         
         let ylen = y.len();
         if ylen != reflector.len() {panic!("vec and its reflector must has same length")}
@@ -629,6 +630,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for i in 1..y.len() {
             reflector[i] = y[i] / w_norm2;
         }
+
+        Ok(())
     }
 
     // for reflator vector v
@@ -663,14 +666,14 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         ma: &[T],
         dim: (usize, usize),
         by_row: bool
-    ) -> (Vec<Vec<T>>, Vec<T>) {
+    ) -> Result<(Vec<Vec<T>>, Vec<T>), ListError> {
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
         let (nr, nc) = dim;
         
         if nr < nc {panic!("nr must >= nc")}
 
         let mut a_mat: Vec<T> = ma.to_vec().clone();
-        let mut q_factor: Vec<Vec<T>> = vec![vec![]; nc];
+        let mut q_factor: Vec<Vec<T>> = vec![];
         let z = T::default();
 
         for c in 0..nc {
@@ -681,13 +684,17 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 v1[i-c] = a_mat[idx(i, c, dim)];
             }
 
-            Array::reflector(&v1, &mut reflector);
+            if let Err(error) = Array::reflector(&v1, &mut reflector) {
+                if error != ListError::ReflectorZeroLength {return Err(error);}
+            }
             Array::reflector_mat_dot_mat(&reflector, &mut a_mat, dim, idx);
-            q_factor[(nc-1) - c] = reflector;
+            q_factor.push(reflector);
         }
 
+        q_factor.reverse();
+
         // the a_mat finally become R
-        (q_factor, a_mat)
+        Ok((q_factor, a_mat))
     }
 
     pub(crate) fn q_factor_dot_ma(
@@ -784,7 +791,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 mat_a[idx(i, i, dim)] -= s
             }
             
-            let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row);
+            let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
             Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
             mat_a = r;
 

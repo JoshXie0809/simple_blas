@@ -55,7 +55,7 @@ Div<Output=T> + Sub<Output=T>
                 let dim: (usize, usize) = (*nr, *nc);
                 let by_row: bool = *put_val_by_row;
                 if *nr < *nc {return Err(ListError::MatrixQRHouseHolderDimError);}
-                let (q_factor, r) = Array::qr_householder(&arr, dim, by_row);
+                let (q_factor, r) = Array::qr_householder(&arr, dim, by_row)?;
                
                 let r = Array::new_array_2d(
                     r.into_boxed_slice(), 
@@ -117,7 +117,7 @@ pub mod tests {
         let dim: (usize, usize) = (4_usize, 3_usize);
         let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
 
-        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
+        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true)?;
 
         for q in q_factor.iter() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
@@ -142,7 +142,7 @@ pub mod tests {
         let dim: (usize, usize) = (4_usize, 3_usize);
         let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
 
-        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true);
+        let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true)?;
 
         for q in q_factor.iter() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);

@@ -116,7 +116,7 @@ pub mod test {
 
         let (q, mut r) = arr.mqr_householder()?;
         Array::mq_factor_mult_mat_a(&q, &mut r)?;
-        let d = Array::compute_dist(&arr, &r)?;
+        let d: f64 = Array::compute_dist(&arr, &r)?;
         assert!(d < 1e-10);
         Ok(())
     }
@@ -125,10 +125,10 @@ pub mod test {
     fn qr_householder_arr_2d_3() -> Result<(), ListError> {
         let arr = Array::new_array_2d(
             Box::new([
-                1.0, 1.5, 
-                2.0, 2.4,
-                3.0, 3.3,
-                4.9, 4.2,
+                1.0, 1.0, 
+                2.0, 2.0,
+                3.0, 3.0,
+                4.0, 4.0,
             ]), 
             (4, 2), 
             true
@@ -147,6 +147,7 @@ pub mod test {
         r.transpose()?;
         
         let d = Array::compute_dist(&arr, &r)?;
+        println!("r: {:?}", r);
         println!("{:e}", d);
         assert!(d < 1e-10);
         Ok(())

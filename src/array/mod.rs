@@ -33,6 +33,7 @@ pub enum ListError {
     NotSquareMat,
     MatrixQRHouseHolderDimError,
     EigenMismatchedDim,
+    ReflectorZeroLength,
 }
 
 /// index for put value by row
