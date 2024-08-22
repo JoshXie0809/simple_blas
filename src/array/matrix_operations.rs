@@ -813,49 +813,47 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
         let n: usize = nr;
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        // let two:  T = T::from(2.0_f32);
-        // let four: T = T::from(4.0_f32);
+        let two:  T = T::from(2.0_f32);
+        let four: T = T::from(4.0_f32);
         let z:    T = T::default();
 
         let n_iter: usize = 
-        if let Some(ni) = max_iter {ni} else {1_0000_usize};
+        if let Some(ni) = max_iter {ni} else {1_000_000_usize};
 
-        let _mtol: T =
-        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
+        let mtol: T =
+        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-20_f32)};
 
         for _iter in 0..n_iter {
-            // // check sub-diagnol whether or not close to zero
-            // let mut isbreak = true;
-            // for r in 0..nr-1 {
-            //     if Array::abs(mat_a[idx(r+1, r, dim)], z) > mtol {
-            //         isbreak = false;
-            //         break;
-            //     }
-            // }
-            // if isbreak {break;}
+            // check sub-diagnol whether or not close to zero
+            let mut isbreak = true;
+            for r in 0..nr-1 {
+                if Array::abs(mat_a[idx(r+1, r, dim)], z) > mtol {
+                    isbreak = false;
+                    break;
+                }
+            }
+            if isbreak {break;}
 
-            // // wilkinson shift
-            // let b11: T = mat_a[idx(n-2, n-2, dim)];
-            // let b12: T = mat_a[idx(n-2, n-1, dim)];
-            // let b21: T = mat_a[idx(n-1, n-2, dim)];
-            // let b22: T = mat_a[idx(n-1, n-1, dim)];
-            // let mut lambda1 = z;
-            // let mut lambda2 = z;
-            // let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
-            // lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
-            // lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
-            // let d1: T = Array::abs(lambda1 - b22, z);
-            // let d2: T = Array::abs(lambda2 - b22, z);
-            // let s: T = if d1 < d2 {lambda1} else {lambda2};
-            
-            // let s = mat_a[idx(n-1, n-1, dim)];
+            // wilkinson shift
+            let b11: T = mat_a[idx(n-2, n-2, dim)];
+            let b12: T = mat_a[idx(n-2, n-1, dim)];
+            let b21: T = mat_a[idx(n-1, n-2, dim)];
+            let b22: T = mat_a[idx(n-1, n-1, dim)];
+            let mut lambda1 = z;
+            let mut lambda2 = z;
+            let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
+            lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
+            lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
+            let d1: T = Array::abs(lambda1 - b22, z);
+            let d2: T = Array::abs(lambda2 - b22, z);
+            let s: T = if d1 < d2 {lambda1} else {lambda2};
 
-            // // make shift
-            // for i in 0..n {
-            //         mat_a[idx(i, i, dim)] -= s
-            // }
+            // make shift
+            for i in 0..n {
+                    mat_a[idx(i, i, dim)] -= s
+            }
             
-            let (qf, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
+            let (qf, r) = Array::qr_householder(&mat_a, dim, by_row)?;
 
             // Array::ma_dot_q_factor(&mut r, dim, by_row, &qf);
             // mat_a = r;
@@ -865,12 +863,10 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, dim, n, by_row, true);
             mat_a = res;
 
-            
-
-            // // recover shift
-            // for i in 0..n {
-            //         mat_a[idx(i, i, dim)] += s
-            // }
+            // recover shift
+            for i in 0..n {
+                    mat_a[idx(i, i, dim)] += s
+            }
         }
 
         let mut eigen_values: Vec<T> = vec![z; n];
