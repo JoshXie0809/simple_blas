@@ -757,19 +757,29 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             // iter
             // A = Q A
-            for c in c..nc {
-                // constant
-                let mut sum: T = T::default();
+            let k = c+1;
+            for j in c..nc {
+                let mut sum: T = z;
 
-                for r in (c+1)..nr {
-                   sum += reflector[r-c-1] * ma[idx(r, c, dim)];
+                for i in k..nr {
+                   sum += reflector[i-k] * ma[idx(i, j, dim)];
                 }
                 
-                for r in (c+1)..nr {
-                    ma[idx(r, c, dim)] -= two * sum * reflector[r-c-1];
+                for i in k..nr {
+                    ma[idx(i, j, dim)] -= two * sum * reflector[i-k];
                 }
             }
-        }        
+
+            for i in 0..nr {
+                let mut sum: T = z;
+                for j in k..nc {
+                    sum += reflector[j-k] * ma[idx(i, j, dim)];
+                }
+                for j in k..nc {
+                    ma[idx(i, j, dim)] -= two * sum * reflector[j-k];
+                }
+            }
+        }
 
         Ok(())
     }
@@ -804,13 +814,11 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             // check sub-diagnol whether or not close to zero
             let mut isbreak = true;
 
-            for r in 1..nr {
-                for c in 0..r {
-                    if Array::abs(mat_a[idx(r, c, dim)], z) > mtol {
+            for r in 0..nr-1 {
+                    if Array::abs(mat_a[idx(r+1, r, dim)], z) > mtol {
                         isbreak = false;
                         break;
                     }
-                }
                 if !isbreak {break;}
             }
 
@@ -830,27 +838,29 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             // let d2: T = Array::abs(lambda2 - b22, z);
             // let s: T = if d1 < d2 {lambda1} else {lambda2};
             
-            // // make shift
-            // for i in 0..n {
-            //         mat_a[idx(i, i, dim)] -= s
-            // }
+            let s = mat_a[idx(n-1, n-1, dim)];
+
+            // make shift
+            for i in 0..n {
+                    mat_a[idx(i, i, dim)] -= s
+            }
             
             let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
             Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
             mat_a = r;
 
-            // // recover shift
-            // for i in 0..n {
-            //         mat_a[idx(i, i, dim)] += s
-            // }
+            // recover shift
+            for i in 0..n {
+                    mat_a[idx(i, i, dim)] += s
+            }
         }
 
-        // let mut eigen_values: Vec<T> = vec![z; n];
-        // for i in 0..n {
-        //     eigen_values[i] = mat_a[idx(i, i, dim)];
-        // }
+        let mut eigen_values: Vec<T> = vec![z; n];
+        for i in 0..n {
+            eigen_values[i] = mat_a[idx(i, i, dim)];
+        }
         
-        Ok(mat_a)
+        Ok(eigen_values)
     }
 
     pub(crate) fn qr(

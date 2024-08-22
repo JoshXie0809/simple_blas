@@ -56,10 +56,46 @@ pub mod tests {
     }
 
     #[test]
+    fn hessenberg_arr_2d_3() -> Result<(), ListError> {
+        let mut ma: Vec<f64> = vec![
+            -149.0, -50.0, -154.0,
+            537.0, 180.0, 546.0, 
+            -27.0, -9.0, -25.0,
+        ];
+
+        let dim: (usize, usize) = (3, 3);
+
+        let qf = Array::hessenberg(&mut ma, dim, true)?;
+        
+        println!("{:?}", ma);
+        println!("{:?}", qf);
+
+        Ok(())
+    }
+
+    #[test]
+    fn hessenberg_arr_2d_4() -> Result<(), ListError> {
+        let mut ma: Vec<f64> = vec![
+            1.0, 3.0, 4.0,
+            4.0, 5.0, 0.0, 
+            1.0, 2.0, 1.0,
+        ];
+
+        let dim: (usize, usize) = (3, 3);
+
+        let qf = Array::hessenberg(&mut ma, dim, true)?;
+        
+        println!("{:?}", ma);
+        println!("{:?}", qf);
+
+        Ok(())
+    }
+
+    #[test]
     fn eigen_method_arr_2d_1() -> Result<(), ListError>{
         let ma = vec![
-            1.23, 1.25,
-            0.01, 5.09,
+            1.23, 0.05,
+            0.05, 5.09,
         ];
 
         let dim: (usize, usize) = (2, 2);
