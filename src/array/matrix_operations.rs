@@ -724,6 +724,34 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Array::q_factor_dot_ma(q_factor, ma, dimt, idxt, true);
     }
 
+    pub(crate) fn eigen_values(ma: &[T], dim: (usize, usize), by_row: bool) -> Result<Vec<T>, ListError>
+    {
+        let (nr,nc) = dim;
+        if nr != nc {return Err(ListError::EigenMismatchedDim);}
+        let mut mat_a = ma.to_vec();
+
+        let n = nr;
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        
+        for _ in 0..5 {            
+            let s = mat_a[idx(n-1, n-1, dim)];
+            
+            for i in 0..n {
+                mat_a[idx(i, i, dim)] -= s
+            }
+            
+            let (q, mut r) = Array::qr_householder(&mat_a, dim, by_row);
+            Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
+            mat_a = r;
+
+            for i in 0..n {
+                mat_a[idx(i, i, dim)] += s
+            }
+        }
+        
+        Ok(mat_a)
+    }
+
     pub(crate) fn qr(
         arr: &[T],
         dim: (usize, usize),

@@ -125,16 +125,20 @@ pub mod test {
     fn qr_householder_arr_2d_3() -> Result<(), ListError> {
         let arr = Array::new_array_2d(
             Box::new([
-                -1.03, 4.023, 
-                17.03, -41.05, 
-                5.01, 6.97,
-                11.01, -9.23,
+                1.0, 1.5, 
+                2.0, 2.4,
+                3.0, 3.3,
+                4.9, 4.2,
             ]), 
             (4, 2), 
             true
         )?;
 
         let (mut q, mut r) = arr.mqr_householder()?;
+
+        println!("q: {:?}", q);
+        println!("r: {:?}", r);
+
         q.reverse();
         r.transpose()?;
 

@@ -14,6 +14,7 @@ mod mmult_method;
 mod mdet_method;
 mod minv_method;
 mod qr_method;
+mod eigen_method;
 
 mod index_trait;
 
@@ -31,6 +32,7 @@ pub enum ListError {
     SingularMat,
     NotSquareMat,
     MatrixQRHouseHolderDimError,
+    EigenMismatchedDim,
 }
 
 /// index for put value by row
