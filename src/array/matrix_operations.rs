@@ -619,6 +619,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         
         let w_norm2: T = T::from(2.0_f32) * y_norm2 * (y_norm2 + y1_abs);
         let w_norm2 = w_norm2.sqrt();
+
+        if w_norm2 < T::from(1e-20_f32) {panic!("y's length is to small to find refletor")}
         
         let ylen = y.len();
         if ylen != reflector.len() {panic!("vec and its reflector must has same length")}
@@ -724,18 +726,60 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         Array::q_factor_dot_ma(q_factor, ma, dimt, idxt, true);
     }
 
-    pub(crate) fn eigen_values(ma: &[T], dim: (usize, usize), by_row: bool) -> Result<Vec<T>, ListError>
+    pub(crate) fn eigen_values(
+        ma: &[T], dim: (usize, usize), 
+        by_row: bool, 
+        max_iter: Option<usize>,
+        max_tol: Option<f32>
+    ) -> Result<Vec<T>, ListError>
     {
         let (nr,nc) = dim;
         if nr != nc {return Err(ListError::EigenMismatchedDim);}
-        let mut mat_a = ma.to_vec();
+        let mut mat_a: Vec<T> = ma.to_vec();
 
-        let n = nr;
+        let n: usize = nr;
         let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
-        
-        for _ in 0..5 {            
-            let s = mat_a[idx(n-1, n-1, dim)];
+        let two:  T = T::from(2.0_f32);
+        let four: T = T::from(4.0_f32);
+        let z:    T = T::default();
+
+        let n_iter: usize = 
+        if let Some(ni) = max_iter {ni} else {100_usize};
+
+        let mtol: T =
+        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
+
+        for _iter in 0..n_iter {
+            // check sub-diagnol whether or not close to zero
+            let mut isbreak = true;
+
+            for r in 1..nr {
+                for c in 0..r {
+                    if Array::abs(mat_a[idx(r, c, dim)], z) > mtol {
+                        isbreak = false;
+                        break;
+                    }
+                }
+                if !isbreak {break;}
+            }
+
+            if isbreak {break;}
+
+            // wilkinson shift
+            let b11: T = mat_a[idx(n-2, n-2, dim)];
+            let b12: T = mat_a[idx(n-2, n-1, dim)];
+            let b21: T = mat_a[idx(n-1, n-2, dim)];
+            let b22: T = mat_a[idx(n-1, n-1, dim)];
+            let mut lambda1 = z;
+            let mut lambda2 = z;
+            let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
+            lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
+            lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
+            let d1: T = Array::abs(lambda1 - b22, z);
+            let d2: T = Array::abs(lambda2 - b22, z);
+            let s: T = if d1 < d2 {lambda1} else {lambda2};
             
+            // make shift
             for i in 0..n {
                 mat_a[idx(i, i, dim)] -= s
             }
@@ -744,12 +788,18 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             Array::ma_dot_q_factor(&mut r, dim, by_row, &q);
             mat_a = r;
 
+            // recover shift
             for i in 0..n {
                 mat_a[idx(i, i, dim)] += s
             }
         }
+
+        let mut eigen_values: Vec<T> = vec![z; n];
+        for i in 0..n {
+            eigen_values[i] = mat_a[idx(i, i, dim)];
+        }
         
-        Ok(mat_a)
+        Ok(eigen_values)
     }
 
     pub(crate) fn qr(
