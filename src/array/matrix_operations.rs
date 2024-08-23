@@ -621,7 +621,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let w_norm2: T = T::from(2.0_f32) * y_norm2 * (y_norm2 + y1_abs);
         let w_norm2 = w_norm2.sqrt();
 
-        if w_norm2 < T::from(1e-20_f32) {return Err(ListError::ReflectorZeroLength);}
+        if w_norm2 == z {return Err(ListError::ReflectorZeroLength);}
         
         let ylen = y.len();
         if ylen != reflector.len() {panic!("vec and its reflector must has same length")}
@@ -645,18 +645,66 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     ) {
         let (nr, nc) = dim;
         let k: usize = nr - v1.len(); // k must >= 0
+        let z: T = T::default();
+        let two = T::from(2.0_f32);
 
-        for c in k..nc {
+        for c in 0..nc {
             // constant
-            let mut sum: T = T::default();
+            let mut sum: T = z;
             for r in k..nr {
                sum += v1[r-k] * ma[idx(r, c, dim)];
             }
             
-            let two = T::from(2.0_f32);
             for r in k..nr {
                 ma[idx(r, c, dim)] -= two * sum * v1[r - k];
             }
+        }
+    }
+
+    pub(crate) fn mat_dot_reflector_mat(
+        ma: &mut [T], // mat_a,
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        v1: &[T], // refector vector which build H matrix
+    ) {
+        let (nr, nc) = dim;
+        let k: usize = nc - v1.len(); // k must >= 0
+        let z: T = T::default();
+        let two = T::from(2.0_f32);
+
+        for r in 0..nr {
+            
+            // constant
+            let mut sum: T = z;
+            for i in k..nc {
+               sum += v1[i-k] * ma[idx(r, i, dim)];
+            }
+            
+            for i in k..nc {
+                ma[idx(r, i, dim)] -= two * sum * v1[i-k];
+            }
+        }
+    }
+
+    pub(crate) fn q_factor_dot_ma (
+        q_factor: & Vec<Vec<T>>,
+        ma: &mut [T],
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize
+    ) {
+        for q in q_factor.iter().rev() {
+            Array::reflector_mat_dot_mat(q, ma, dim, idx);
+        } 
+    }
+
+    pub(crate) fn ma_dot_q_factor(
+        ma: &mut [T],
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        q_factor: & Vec<Vec<T>>,
+    ) {
+        for q in q_factor.iter() {
+            Array::mat_dot_reflector_mat(ma, dim, idx, q);
         }
     }
 
@@ -686,17 +734,18 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             if let Err(error) = Array::reflector(&v1, &mut reflector) {
                 if error != ListError::ReflectorZeroLength {return Err(error);}
+                continue;
             }
+
             Array::reflector_mat_dot_mat(&reflector, &mut a_mat, dim, idx);
             q_factor.push(reflector);
         }
-
-        q_factor.reverse();
 
         // the a_mat finally become R
         Ok((q_factor, a_mat))
     }
 
+    // transfer q_factor to a Q matrix
     pub(crate) fn get_qm(q_factor: &Vec<Vec<T>>, n: usize) -> Vec<T> {
         let mut ma: Vec<T> = vec![T::default(); n * n];
         let dim: (usize, usize) = (n, n);
@@ -706,43 +755,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             ma[idx(i, i, dim)] = T::from(1.0_f32);
         }
 
-        Array::q_factor_dot_ma(q_factor, &mut ma, dim, idx, false);
+        Array::q_factor_dot_ma(q_factor, &mut ma, dim, idx);
 
         ma
-    }
-
-    pub(crate) fn q_factor_dot_ma (
-        q_factor: & Vec<Vec<T>>,
-        ma: &mut [T],
-        dim: (usize, usize),
-        idx: fn(usize, usize, (usize, usize)) -> usize,
-        transpose: bool
-    ) {
-        if transpose {
-            for q in q_factor.iter().rev() {
-                Array::reflector_mat_dot_mat(q, ma, dim, idx);
-            }
-        } else {
-            for q in q_factor.iter() {
-                Array::reflector_mat_dot_mat(q, ma, dim, idx);
-            }
-        }
-    }
-
-    pub(crate) fn ma_dot_q_factor(
-        ma: &mut [T],
-        dim: (usize, usize),
-        by_row: bool,
-        q_factor: & Vec<Vec<T>>,
-    ) {
-        // A * Q
-        // (Q' A')'
-        // for A'
-        let (nr, nc) = dim;
-        let dimt: (usize, usize) = (nc, nr);
-        let by_row_t: bool = !by_row;
-        let idxt: fn(usize, usize, (usize, usize)) -> usize = if by_row_t {idxr} else {idxc};
-        Array::q_factor_dot_ma(q_factor, ma, dimt, idxt, true);
     }
 
     // Hessenberg_form
@@ -759,7 +774,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let z: T = T::default();
         let two: T = T::from(2.0_f32);
 
-        
         for c in 0..(n-2) {
             let mut v1: Vec<T> = vec![z; nr-c-1];
             let mut reflector: Vec<T> = vec![z; nr-c-1];    
@@ -853,15 +867,16 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                     mat_a[idx(i, i, dim)] -= s
             }
             
-            let (qf, r) = Array::qr_householder(&mat_a, dim, by_row)?;
+            let (qf, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
 
-            // Array::ma_dot_q_factor(&mut r, dim, by_row, &qf);
-            // mat_a = r;
+            Array::ma_dot_q_factor(&mut r, dim, idx, &qf);
+            mat_a = r;
 
-            let qm = Array::get_qm(&qf, n);
-            let mut res: Vec<T> = vec![z; n * n];
-            Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, dim, n, by_row, true);
-            mat_a = res;
+            // // qm is put value by row
+            // let qm: Vec<T> = Array::get_qm(&qf, n);
+            // let mut res: Vec<T> = vec![z; n * n];
+            // Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, dim, n, by_row, true);
+            // mat_a = res;
 
             // recover shift
             for i in 0..n {

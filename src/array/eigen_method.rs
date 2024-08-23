@@ -15,7 +15,7 @@ Div<Output=T> + Sub<Output=T>
 
 #[cfg(test)]
 pub mod tests {
-    use crate::array::{Array, ListError};
+    use crate::array::{idxr, Array, ListError};
 
     #[test]
     fn hessenberg_arr_2d_1() -> Result<(), ListError> {
@@ -92,6 +92,37 @@ pub mod tests {
     }
 
     #[test]
+    fn ma_dot_q_factor_arr_2d_1() -> Result<(), ListError>{
+        let arr: Vec<f64> = vec![
+            1.0, 2.0, 3.0,
+            4.0, 9.0, 11.0,
+            17.0, 18.0, 29.0,
+        ];
+
+        let dim: (usize, usize) = (3, 3);
+
+        let (qf, mut r) = Array::qr_householder(&arr, dim, true)?;
+        let qm: Vec<f64> = Array::get_qm(&qf, 3);
+        
+
+        let mut res: Vec<f64> = vec![0.0; 9];
+        Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, (3, 3), 3, true, true);
+        
+
+        println!("{:?}", res);
+
+        let idx: fn(usize, usize, (usize, usize)) -> usize = idxr;
+        Array::ma_dot_q_factor(&mut r, dim, idx, &qf);
+        println!("{:?}", r);
+
+        let d: f64 = Array::dist_n2_vec_v1_v2(&r, &res)?;
+        assert!(d < 1e-10);
+        
+
+        Ok(())
+    }
+
+    #[test]
     fn eigen_method_arr_2d_1() -> Result<(), ListError>{
         let ma = vec![
             1.23, 0.05,
@@ -103,7 +134,7 @@ pub mod tests {
         println!("{:?}", e_vals);
 
         Ok(())
-    }
+    } 
 
     #[test]
     fn eigen_method_arr_2d_2() -> Result<(), ListError> {
@@ -118,6 +149,10 @@ pub mod tests {
 
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
         println!("{:?}", e_vals);
+
+        let d: f64 = Array::dist_n2_vec_v1_v2(&e_vals, &vec![1.01, 6.07, 5.20])?;
+
+        assert!(d < 1e-10);
 
         Ok(())
     }

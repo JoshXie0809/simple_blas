@@ -76,7 +76,7 @@ Div<Output=T> + Sub<Output=T>
             => {
                 let dim: (usize, usize) = (*nr, *nc);
                 let idx: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row {idxr} else {idxc};
-                Array::q_factor_dot_ma(q_factor,arr, dim, idx, false);
+                Array::q_factor_dot_ma(q_factor,arr, dim, idx);
             }
 
             _ => return Err(ListError::MismatchedTypes)
@@ -89,8 +89,9 @@ Div<Output=T> + Sub<Output=T>
         match ma {
             Array::Array2D { arr, nr, nc, put_val_by_row } 
             => {
+                let idx: fn(usize, usize, (usize, usize)) -> usize = if *put_val_by_row {idxr} else {idxc};
                 let dim: (usize, usize) = (*nr, *nc);
-                Array::ma_dot_q_factor(arr, dim, *put_val_by_row, q_factor);
+                Array::ma_dot_q_factor(arr, dim, idx, q_factor);
             }
 
             _ => return Err(ListError::MismatchedTypes)
@@ -119,7 +120,7 @@ pub mod tests {
 
         let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true)?;
 
-        for q in q_factor.iter() {
+        for q in q_factor.iter().rev() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
         }
 
@@ -144,7 +145,7 @@ pub mod tests {
 
         let (q_factor, mut r) = Array::qr_householder(&a_mat, dim, true)?;
 
-        for q in q_factor.iter() {
+        for q in q_factor.iter().rev() {
             Array::reflector_mat_dot_mat(q, &mut r, dim, idx);
         }
 

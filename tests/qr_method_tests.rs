@@ -125,7 +125,7 @@ pub mod test {
     fn qr_householder_arr_2d_3() -> Result<(), ListError> {
         let arr = Array::new_array_2d(
             Box::new([
-                1.0, 1.0, 
+                1.0, 1.9, 
                 2.0, 2.1,
                 3.0, 3.3,
                 4.0, 4.5,
@@ -144,11 +144,13 @@ pub mod test {
 
         // a = r'q'
         Array::mmat_a_mult_q_factor( &mut r, &q)?;
-        // a = a'
+        
+        // a = a' = qr
         r.transpose()?;
         
-        let d = Array::compute_dist(&arr, &r)?;
+        let d: f64 = Array::compute_dist(&arr, &r)?;
         println!("r: {:?}", r);
+        println!("a: {:?}", arr);
         println!("{:e}", d);
         assert!(d < 1e-10);
         Ok(())
