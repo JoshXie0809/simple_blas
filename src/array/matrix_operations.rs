@@ -662,6 +662,9 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     }
 
     // special case in qr_householder
+    // in qr_householder procedure
+    // it eliminates prvious columns elements to zero
+    // so we can skip some columns
     pub(crate) fn reflector_mat_dot_mat_hqr(
         v1: &[T], // refector vector which build H matrix
         ma: &mut [T], // mat_a,
