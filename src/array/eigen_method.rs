@@ -9,7 +9,9 @@ Div<Output=T> + Sub<Output=T>
 + PartialEq + AddAssign + Copy + MulAssign + SubAssign
 + Default + PartialOrd + From<f32>
 {
-
+    pub fn meig() {
+        
+    }
 }
 
 
@@ -166,6 +168,9 @@ pub mod tests {
 
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
         println!("{:?}", e_vals);
+
+        let e_vecs: Vec<f64> = Array::eigen_vectors(&ma, dim, idxr, &e_vals)?;
+        println!("{:?}", e_vecs);
 
         Ok(())
     }

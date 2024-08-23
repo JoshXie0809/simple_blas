@@ -915,6 +915,67 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
     }
 
+    pub(crate) fn eigen_vector(
+        ma: &[T],
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        e_val: T,
+    ) -> Result<Vec<T>, ListError>
+    {
+        let (nr, nc) = dim;
+        if nr != nc {panic!("eigen vector needs SQUARE!")}
+        let n = nr;
+
+        let mut mat_a = ma.to_vec();
+        for i in 0..n {
+            mat_a[idx(i, i, dim)] -= e_val;
+        }
+
+        let mut p: Vec<(usize, usize)> = vec![];
+        let mut mat_a: Box<[T]> = mat_a.into_boxed_slice();
+
+        Array::p_lu(&mut p, &mut mat_a, dim, idx);        
+        let lu: Box<[T]> = mat_a;
+
+        // make random vetor b
+        let mut b: Vec<T> = vec![T::default(); nr];
+        for i in 0..nr {b[i] = lu[idx(i, 0, dim)];}
+
+        for _iter in 0..10 {
+            // result
+            let mut x: Vec<T> = vec![T::default(); nr];
+            Array::p_lu_solve(&lu, &p, &mut b, &mut x, dim, idx)?;
+            // make unit vector
+            let xlen = Array::norm_2(&x);
+            let sign: T = if x[0] < T::default() {T::from(-1.0_f32)} else {T::from(1.0_f32)};
+            for i in 0..nr {x[i] = sign * x[i] / xlen};
+            b = x;
+        }
+
+        Ok(b)
+    }
+
+    pub(crate) fn eigen_vectors(
+        ma: &[T],
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize,
+        e_vals: &[T],
+    ) -> Result<Vec<T>, ListError>
+    {
+        let (nr, nc) = dim;
+        if nr != nc {panic!("eigen vector needs SQUARE!")}
+        let n = nr;
+
+        let mut evecs = vec![T::default(); n * n];
+
+        for c in 0..n {
+            let evec = Array::eigen_vector(ma, dim, idx, e_vals[c])?;
+            for i in 0..n {evecs[idx(i, c, dim)] = evec[i]}
+        }
+
+        Ok(evecs)
+    }
+
     pub(crate) fn qr(
         arr: &[T],
         dim: (usize, usize),
