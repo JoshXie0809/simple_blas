@@ -934,14 +934,17 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let mut p: Vec<(usize, usize)> = vec![];
         let mut mat_a: Box<[T]> = mat_a.into_boxed_slice();
 
+        // make random vetor b
+        let mut b: Vec<T> = vec![T::default(); nr];
+        for i in 0..nr {b[i] = mat_a[idx(i, 0, dim)];}
+
         Array::p_lu(&mut p, &mut mat_a, dim, idx);        
         let lu: Box<[T]> = mat_a;
 
-        // make random vetor b
-        let mut b: Vec<T> = vec![T::default(); nr];
-        for i in 0..nr {b[i] = lu[idx(i, 0, dim)];}
+        let mtol: T = T::from(1e-15_f32);
+        let max_iter: i32 = 100;
 
-        for _iter in 0..10 {
+        for _iter in 0..max_iter {
             // result
             let mut x: Vec<T> = vec![T::default(); nr];
             Array::p_lu_solve(&lu, &p, &mut b, &mut x, dim, idx)?;
@@ -949,6 +952,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             let xlen = Array::norm_2(&x);
             let sign: T = if x[0] < T::default() {T::from(-1.0_f32)} else {T::from(1.0_f32)};
             for i in 0..nr {x[i] = sign * x[i] / xlen};
+            if Array::dist_n2_vec_v1_v2(&b, &x)? < mtol {b = x; break;}
             b = x;
         }
 
