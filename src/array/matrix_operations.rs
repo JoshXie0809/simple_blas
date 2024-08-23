@@ -809,7 +809,14 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             for i in (c+1)..n {
                 v1[i-c-1] = ma[idx(i, c, dim)];
             }
-            Array::reflector(&v1, &mut reflector)?;
+            
+            // check sub-diagonal is zero column vector
+            if let Err(err) = Array::reflector(&v1, &mut reflector) {
+                if err != ListError::ReflectorZeroLength {
+                    return Err(err);
+                }
+                continue;
+            }
 
             // iter
             // A = Q A
@@ -920,11 +927,13 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         dim: (usize, usize),
         idx: fn(usize, usize, (usize, usize)) -> usize,
         e_val: T,
+        ith: usize,
     ) -> Result<Vec<T>, ListError>
     {
         let (nr, nc) = dim;
         if nr != nc {panic!("eigen vector needs SQUARE!")}
         let n = nr;
+        let z: T = T::default();
 
         let mut mat_a = ma.to_vec();
         for i in 0..n {
@@ -934,23 +943,24 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let mut p: Vec<(usize, usize)> = vec![];
         let mut mat_a: Box<[T]> = mat_a.into_boxed_slice();
 
-        // make random vetor b
-        let mut b: Vec<T> = vec![T::default(); nr];
-        for i in 0..nr {b[i] = mat_a[idx(i, 0, dim)];}
-
         Array::p_lu(&mut p, &mut mat_a, dim, idx);        
         let lu: Box<[T]> = mat_a;
 
+        // make random vetor b
+        let mut b: Vec<T> = vec![z; nr];
+        for i in 0..nr {b[i] = lu[idx(i, ith, dim)];}
+
         let mtol: T = T::from(1e-15_f32);
-        let max_iter: i32 = 100;
+        let max_iter: i32 = 10;
 
         for _iter in 0..max_iter {
             // result
-            let mut x: Vec<T> = vec![T::default(); nr];
+            let mut x: Vec<T> = vec![z; nr];
             Array::p_lu_solve(&lu, &p, &mut b, &mut x, dim, idx)?;
             // make unit vector
             let xlen = Array::norm_2(&x);
-            let sign: T = if x[0] < T::default() {T::from(-1.0_f32)} else {T::from(1.0_f32)};
+            if xlen == z {b = x; continue;}
+            let sign: T = if x[0] < z {T::from(-1.0_f32)} else {T::from(1.0_f32)};
             for i in 0..nr {x[i] = sign * x[i] / xlen};
             if Array::dist_n2_vec_v1_v2(&b, &x)? < mtol {b = x; break;}
             b = x;
@@ -962,18 +972,22 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
     pub(crate) fn eigen_vectors(
         ma: &[T],
         dim: (usize, usize),
-        idx: fn(usize, usize, (usize, usize)) -> usize,
+        by_row: bool,
         e_vals: &[T],
     ) -> Result<Vec<T>, ListError>
     {
+        let idx: fn(usize, usize, (usize, usize)) -> usize = if by_row {idxr} else {idxc};
+        let mut ma: Vec<T> = ma.to_vec();
+        Array::hessenberg(&mut ma, dim, by_row)?;
+
         let (nr, nc) = dim;
         if nr != nc {panic!("eigen vector needs SQUARE!")}
-        let n = nr;
+        let n: usize = nr;
 
-        let mut evecs = vec![T::default(); n * n];
+        let mut evecs: Vec<T> = vec![T::default(); n * n];
 
         for c in 0..n {
-            let evec = Array::eigen_vector(ma, dim, idx, e_vals[c])?;
+            let evec = Array::eigen_vector(&ma, dim, idx, e_vals[c], c)?;
             for i in 0..n {evecs[idx(i, c, dim)] = evec[i]}
         }
 

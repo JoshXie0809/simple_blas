@@ -169,7 +169,26 @@ pub mod tests {
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
         println!("{:?}", e_vals);
 
-        let e_vecs: Vec<f64> = Array::eigen_vectors(&ma, dim, idxr, &e_vals)?;
+        let e_vecs: Vec<f64> = Array::eigen_vectors(&ma, dim, true, &e_vals)?;
+        println!("{:?}", e_vecs);
+
+        Ok(())
+    }
+
+    #[test]
+    fn eigen_method_arr_2d_4() -> Result<(), ListError> {
+        let ma: Vec<f64> = vec![
+             1.5, 2.19, 0.27,
+             0.00, 1.01, 0.9,
+             0.00, 0.09, 3.45,
+        ];
+
+        let dim: (usize, usize) = (3, 3);
+
+        let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
+        println!("{:?}", e_vals);
+
+        let e_vecs: Vec<f64> = Array::eigen_vectors(&ma, dim, true, &e_vals)?;
         println!("{:?}", e_vecs);
 
         Ok(())
