@@ -103,11 +103,9 @@ pub mod tests {
 
         let (qf, mut r) = Array::qr_householder(&arr, dim, true)?;
         let qm: Vec<f64> = Array::get_qm(&qf, 3);
-        
 
         let mut res: Vec<f64> = vec![0.0; 9];
         Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, (3, 3), 3, true, true);
-        
 
         println!("{:?}", res);
 
@@ -118,7 +116,6 @@ pub mod tests {
         let d: f64 = Array::dist_n2_vec_v1_v2(&r, &res)?;
         assert!(d < 1e-10);
         
-
         Ok(())
     }
 
@@ -144,7 +141,6 @@ pub mod tests {
              7.21, 3.12, 5.20
         ];
 
-
         let dim: (usize, usize) = (3, 3);
 
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
@@ -164,7 +160,6 @@ pub mod tests {
              5.07, 6.07, 11.95,
              7.21, 3.12, 5.20
         ];
-
 
         let dim: (usize, usize) = (3, 3);
 

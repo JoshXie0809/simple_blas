@@ -861,10 +861,10 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         let z:    T = T::default();
 
         let n_iter: usize = 
-        if let Some(ni) = max_iter {ni} else {1_000_000_usize};
+        if let Some(ni) = max_iter {ni} else {10_000_usize};
 
         let mtol: T =
-        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-20_f32)};
+        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
 
         for _iter in 0..n_iter {
             // check sub-diagnol whether or not close to zero
@@ -882,18 +882,16 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             let b12: T = mat_a[idx(n-2, n-1, dim)];
             let b21: T = mat_a[idx(n-1, n-2, dim)];
             let b22: T = mat_a[idx(n-1, n-1, dim)];
-            let mut lambda1 = z;
-            let mut lambda2 = z;
-            let p2: T = (b11 - b22).powi(2) + four * b12 * b21; 
-            lambda1 +=  (b11 + b22 + p2.sqrt()) / two;
-            lambda2 +=  (b11 + b22 - p2.sqrt()) / two;
+            let p2: T = (b11 - b22).powi(2) + four * b12 * b21;
+            let lambda1: T = (b11 + b22 + p2.sqrt()) / two;
+            let lambda2: T = (b11 + b22 - p2.sqrt()) / two;
             let d1: T = Array::abs(lambda1 - b22, z);
             let d2: T = Array::abs(lambda2 - b22, z);
             let s: T = if d1 < d2 {lambda1} else {lambda2};
 
             // make shift
             for i in 0..n {
-                    mat_a[idx(i, i, dim)] -= s
+                mat_a[idx(i, i, dim)] -= s
             }
             
             let (qf, mut r) = Array::qr_householder(&mat_a, dim, by_row)?;
@@ -909,7 +907,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
 
             // recover shift
             for i in 0..n {
-                    mat_a[idx(i, i, dim)] += s
+                mat_a[idx(i, i, dim)] += s
             }
         }
 
