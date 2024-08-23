@@ -661,6 +661,31 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         }
     }
 
+    // special case in qr_householder
+    pub(crate) fn reflector_mat_dot_mat_hqr(
+        v1: &[T], // refector vector which build H matrix
+        ma: &mut [T], // mat_a,
+        dim: (usize, usize),
+        idx: fn(usize, usize, (usize, usize)) -> usize
+    ) {
+        let (nr, nc) = dim;
+        let k: usize = nr - v1.len(); // k must >= 0
+        let z: T = T::default();
+        let two = T::from(2.0_f32);
+
+        for c in k..nc {
+            // constant
+            let mut sum: T = z;
+            for r in k..nr {
+               sum += v1[r-k] * ma[idx(r, c, dim)];
+            }
+            
+            for r in k..nr {
+                ma[idx(r, c, dim)] -= two * sum * v1[r - k];
+            }
+        }
+    }
+
     pub(crate) fn mat_dot_reflector_mat(
         ma: &mut [T], // mat_a,
         dim: (usize, usize),
@@ -737,7 +762,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
                 continue;
             }
 
-            Array::reflector_mat_dot_mat(&reflector, &mut a_mat, dim, idx);
+            // call sepcial case in qr householder
+            Array::reflector_mat_dot_mat_hqr(&reflector, &mut a_mat, dim, idx);
             q_factor.push(reflector);
         }
 
