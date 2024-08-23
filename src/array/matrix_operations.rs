@@ -864,7 +864,7 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         if let Some(ni) = max_iter {ni} else {10_000_usize};
 
         let mtol: T =
-        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-15_f32)};
+        if let Some(mt) = max_tol {T::from(mt)} else {T::from(1e-20_f32)};
 
         for _iter in 0..n_iter {
             // check sub-diagnol whether or not close to zero
@@ -899,12 +899,6 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
             Array::ma_dot_q_factor(&mut r, dim, idx, &qf);
             mat_a = r;
 
-            // // qm is put value by row
-            // let qm: Vec<T> = Array::get_qm(&qf, n);
-            // let mut res: Vec<T> = vec![z; n * n];
-            // Array::mat_m1_mat_mult_mat_m2(&mut res, &r, &qm, dim, n, by_row, true);
-            // mat_a = res;
-
             // recover shift
             for i in 0..n {
                 mat_a[idx(i, i, dim)] += s
@@ -915,6 +909,8 @@ where T: Add<Output=T> + Mul<Output=T> + Div<Output=T>
         for i in 0..n {
             eigen_values[i] = mat_a[idx(i, i, dim)];
         }
+
+        eigen_values.sort_by(|a, b| b.partial_cmp(a).unwrap());
         Ok(eigen_values)
 
     }

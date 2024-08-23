@@ -146,7 +146,7 @@ pub mod tests {
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
         println!("{:?}", e_vals);
 
-        let d: f64 = Array::dist_n2_vec_v1_v2(&e_vals, &vec![1.01, 6.07, 5.20])?;
+        let d: f64 = Array::dist_n2_vec_v1_v2(&e_vals, &vec![6.07, 5.20, 1.01])?;
 
         assert!(d < 1e-10);
 
@@ -156,12 +156,13 @@ pub mod tests {
     #[test]
     fn eigen_method_arr_2d_3() -> Result<(), ListError> {
         let ma: Vec<f64> = vec![
-             1.01, 2.02, 3.79,
-             5.07, 6.07, 11.95,
-             7.21, 3.12, 5.20
+             1.01, 2.02, 3.79, 0.05,
+             5.07, 6.07, 11.95, 1.23,
+             7.21, 3.12, 5.20, 1.17,
+             7.719, 5.508, 9.919, 11.21,
         ];
 
-        let dim: (usize, usize) = (3, 3);
+        let dim: (usize, usize) = (4, 4);
 
         let e_vals: Vec<f64> = Array::eigen_values(&ma, dim, true, None, None)?;
         println!("{:?}", e_vals);
