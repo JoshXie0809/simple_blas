@@ -17,7 +17,7 @@ mod qr_method;
 mod eigen_method;
 
 mod index_trait;
-
+mod display_trait;
 
 /// ## Possibe Error types
 #[derive(Debug, PartialEq)]

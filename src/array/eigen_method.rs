@@ -179,8 +179,8 @@ pub mod tests {
     fn eigen_method_arr_2d_4() -> Result<(), ListError> {
         let ma: Vec<f64> = vec![
              1.5, 2.19, 0.27,
-             0.00, 1.01, 0.9,
-             0.00, 0.09, 3.45,
+             2.19, 1.01, 0.9,
+             0.27, 0.9, 1.01,
         ];
 
         let dim: (usize, usize) = (3, 3);
